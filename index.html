@@ -152,7 +152,7 @@
   <!-- ============================================================
        人來人往（街景動畫）
        ============================================================ -->
-  <section aria-label="門市人來人往的街景" class="street relative h-32 sm:h-40 overflow-hidden"
+  <section aria-label="門市人來人往的街景" class="street relative h-40 sm:h-48 overflow-hidden"
            x-data="{ people: Array.from({length: 14}, (_, i) => {
              const rtl = i % 2 === 1, d = i % 3;
              return {
@@ -166,7 +166,48 @@
                skin: ['#f1c9a5','#e0a97d','#c68863'][i % 3]
              };
            }) }">
-    <p class="absolute left-4 top-3 z-10 text-xs tracking-[0.3em] text-cream/60 sm:left-6">BUSTLING DAILY · 每天都有人排隊的好味道</p>
+    <p class="absolute bottom-1.5 left-4 z-20 text-[10px] tracking-[0.3em] text-cream/50 sm:left-6 sm:text-xs">BUSTLING DAILY · 每天都有人排隊的好味道</p>
+    <!-- 商店街景（在行人後方） -->
+    <svg class="pointer-events-none absolute inset-x-0 top-0 h-[62%] w-full" viewBox="0 0 1200 110" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <!-- 路燈 -->
+      <g fill="#1d130c"><rect x="38" y="30" width="4" height="80"/><rect x="1078" y="30" width="4" height="80"/></g>
+      <g fill="#ffd9a0"><circle cx="40" cy="28" r="7"/><circle cx="1080" cy="28" r="7"/></g>
+      <!-- 茶飲店 -->
+      <rect x="80" y="40" width="250" height="70" fill="#2f4a46"/>
+      <path d="M72 40h266l-14 22H86z" fill="#4f8f86"/>
+      <rect x="104" y="70" width="90" height="40" rx="3" fill="#ffd9a0" opacity=".85"/>
+      <rect x="220" y="70" width="86" height="40" rx="3" fill="#ffd9a0" opacity=".6"/>
+      <text x="205" y="57" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="'Noto Serif TC',serif">手搖茶飲</text>
+      <!-- 小吃店 -->
+      <rect x="360" y="48" width="180" height="62" fill="#5a3b2a"/>
+      <path d="M352 48h196l-12 20H364z" fill="#b5483a"/>
+      <rect x="378" y="76" width="64" height="34" rx="3" fill="#ffd9a0" opacity=".7"/>
+      <rect x="456" y="76" width="68" height="34" rx="3" fill="#ffd9a0" opacity=".85"/>
+      <text x="450" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="'Noto Serif TC',serif">古早味小吃</text>
+      <!-- 主角：金脆鍋貼 -->
+      <rect x="570" y="22" width="260" height="88" fill="#3B2A1E" stroke="#E0823A" stroke-width="2"/>
+      <rect x="590" y="26" width="220" height="24" rx="4" fill="#E0823A"/>
+      <text x="700" y="44" text-anchor="middle" font-size="18" font-weight="900" fill="#3B2A1E" font-family="'Noto Serif TC',serif">金脆鍋貼</text>
+      <path d="M562 54h276l-16 18H578z" fill="#C2662A"/>
+      <path d="M578 72h244" stroke="#FBF6EE" stroke-width="2" stroke-dasharray="10 10" opacity=".5"/>
+      <rect x="592" y="78" width="100" height="32" rx="3" fill="#ffc977"/>
+      <rect x="718" y="78" width="40" height="32" rx="3" fill="#2a1d14"/>
+      <rect x="772" y="78" width="38" height="32" rx="3" fill="#ffc977" opacity=".8"/>
+      <g fill="#c62828"><ellipse cx="580" cy="70" rx="8" ry="10"/><ellipse cx="820" cy="70" rx="8" ry="10"/></g>
+      <!-- 伴手禮店 -->
+      <rect x="860" y="44" width="180" height="66" fill="#3d3a5a"/>
+      <path d="M852 44h196l-12 20H864z" fill="#7a6fb0"/>
+      <rect x="880" y="74" width="68" height="36" rx="3" fill="#ffd9a0" opacity=".75"/>
+      <rect x="962" y="74" width="62" height="36" rx="3" fill="#ffd9a0" opacity=".6"/>
+      <text x="950" y="59" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="'Noto Serif TC',serif">伴手禮</text>
+      <!-- 右側邊緣店面 -->
+      <rect x="1100" y="52" width="100" height="58" fill="#2f3b4a"/>
+      <rect x="1116" y="74" width="68" height="36" rx="3" fill="#ffd9a0" opacity=".7"/>
+      <!-- 左側邊緣店面 -->
+      <rect x="0" y="58" width="30" height="52" fill="#2f3b4a"/>
+    </svg>
+    <!-- 人行道 -->
+    <div class="pointer-events-none absolute inset-x-0 top-[62%] h-1 bg-cream/20"></div>
     <template x-for="(p, i) in people" :key="i">
       <div class="walker" :class="{ rtl: p.rtl }" aria-hidden="true"
            :style="`bottom:${p.bottom}px; animation-duration:${p.dur}s; animation-delay:${p.delay}s; --x:${p.x}; z-index:${Math.round(10 - p.bottom)}`">
