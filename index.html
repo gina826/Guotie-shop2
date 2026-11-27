@@ -562,6 +562,24 @@
 </div>
 
 <!-- ============================================================
+     海報彈出層（進入首頁時蓋在主頁上方，可關閉）
+     ============================================================ -->
+<div x-data="{ open: true }" x-show="open" x-cloak
+     x-init="document.addEventListener('keydown', e => { if (e.key === 'Escape') open = false })"
+     x-effect="document.body.style.overflow = open ? 'hidden' : ''"
+     x-transition.opacity
+     class="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4"
+     role="dialog" aria-modal="true" aria-label="活動海報"
+     @click.self="open = false">
+  <div class="relative max-h-full">
+    <button type="button" @click="open = false" aria-label="關閉海報"
+            class="absolute -top-3 -right-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white text-xl font-bold text-wood shadow-lg hover:bg-cream focus:outline-none focus-visible:ring-4 focus-visible:ring-ember/50">&times;</button>
+    <img src="https://i.postimg.cc/j2YmMLV1/Chat-GPT-Image-2026nian8yue9ri-xia-wu06-20-57.png" alt="金脆鍋貼海報"
+         class="max-h-[88vh] max-w-full rounded-2xl object-contain shadow-2xl">
+  </div>
+</div>
+
+<!-- ============================================================
      右下角浮動預約按鈕（Google 日曆預約）
      ============================================================ -->
 <a href="https://calendar.app.google/qQenP9iKDzTwReda9" target="_blank" rel="noopener noreferrer"
