@@ -45,6 +45,22 @@
       content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .08;
       background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 4px 4px;
     }
+    /* 人來人往動畫 */
+    .street { background: linear-gradient(180deg, #2a1d14 0%, #4a3322 62%, #3B2A1E 62%, #2a1d14 100%); }
+    .walker { position: absolute; left: 0; will-change: transform; animation-name: walk-r; animation-timing-function: linear; animation-iteration-count: infinite; }
+    .walker.rtl { animation-name: walk-l; }
+    .walker .figure { transform-origin: 50% 100%; animation: bob .55s ease-in-out infinite; }
+    .walker.rtl .figure { transform: scaleX(-1); }
+    .walker .leg { transform-origin: 12px 33px; animation: step .55s ease-in-out infinite alternate; }
+    .walker .leg.b { animation-direction: alternate-reverse; }
+    @keyframes walk-r { from { transform: translateX(-12vw); } to { transform: translateX(112vw); } }
+    @keyframes walk-l { from { transform: translateX(112vw); } to { transform: translateX(-12vw); } }
+    @keyframes bob  { 0%,100% { translate: 0 0; } 50% { translate: 0 -2px; } }
+    @keyframes step { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .walker, .walker .figure, .walker .leg { animation: none; }
+      .walker { transform: translateX(calc(var(--x, 50) * 1vw)); }
+    }
   </style>
 </head>
 
@@ -131,6 +147,39 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ============================================================
+       人來人往（街景動畫）
+       ============================================================ -->
+  <section aria-label="門市人來人往的街景" class="street relative h-32 sm:h-40 overflow-hidden"
+           x-data="{ people: Array.from({length: 14}, (_, i) => {
+             const rtl = i % 2 === 1, d = i % 3;
+             return {
+               rtl,
+               scale: [0.8, 1, 1.2][d],
+               bottom: [14, 8, 2][d],
+               dur: 16 + ((i * 7) % 15),
+               delay: -((i * 5.3) % 24),
+               x: (i * 37) % 100,
+               color: ['#E0823A','#F3EADB','#C2662A','#8A4B22','#FBF6EE','#d9a066'][i % 6],
+               skin: ['#f1c9a5','#e0a97d','#c68863'][i % 3]
+             };
+           }) }">
+    <p class="absolute left-4 top-3 z-10 text-xs tracking-[0.3em] text-cream/60 sm:left-6">BUSTLING DAILY · 每天都有人排隊的好味道</p>
+    <template x-for="(p, i) in people" :key="i">
+      <div class="walker" :class="{ rtl: p.rtl }" aria-hidden="true"
+           :style="`bottom:${p.bottom}px; animation-duration:${p.dur}s; animation-delay:${p.delay}s; --x:${p.x}; z-index:${Math.round(10 - p.bottom)}`">
+        <svg class="figure" :style="`width:${24 * p.scale}px;height:${60 * p.scale}px`" viewBox="0 0 24 60" fill="none">
+          <g stroke="#6b4e38" stroke-width="5" stroke-linecap="round">
+            <line class="leg b" x1="12" y1="33" x2="12" y2="56"/>
+            <line class="leg a" x1="12" y1="33" x2="12" y2="56"/>
+          </g>
+          <rect x="5" y="14" width="14" height="22" rx="6" :fill="p.color"/>
+          <circle cx="12" cy="8" r="6" :fill="p.skin"/>
+        </svg>
+      </div>
+    </template>
   </section>
 
   <!-- ============================================================
