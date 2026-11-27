@@ -33,6 +33,9 @@
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
+  <!-- Three.js（3D 街景） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
@@ -45,31 +48,7 @@
       content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .08;
       background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 4px 4px;
     }
-    /* 人來人往動畫 */
-    .street { background: linear-gradient(180deg, #2a1d14 0%, #4a3322 66%, #3B2A1E 66%, #2a1d14 100%); }
-    .walker { position: absolute; left: 0; will-change: transform; animation-name: walk-r; animation-timing-function: linear; animation-iteration-count: infinite; }
-    .walker.rtl { animation-name: walk-l; }
-    .walker .figure { transform-origin: 50% 100%; animation: bob .55s ease-in-out infinite; }
-    .walker.rtl .figure { transform: scaleX(-1); }
-    .walker .leg { transform-origin: 12px 33px; animation: step .55s ease-in-out infinite alternate; }
-    .walker .leg.b { animation-direction: alternate-reverse; }
-    @keyframes walk-r { from { transform: translateX(-12vw); } to { transform: translateX(112vw); } }
-    @keyframes walk-l { from { transform: translateX(112vw); } to { transform: translateX(-12vw); } }
-    @keyframes bob  { 0%,100% { translate: 0 0; } 50% { translate: 0 -2px; } }
-    @keyframes step { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
-    @media (prefers-reduced-motion: reduce) {
-      .walker, .walker .figure, .walker .leg { animation: none; }
-      .walker { transform: translateX(calc(var(--x, 50) * 1vw)); }
-    }
-    .sway { transform-box: fill-box; transform-origin: 50% 0; animation: sway 3.2s ease-in-out infinite alternate; }
-    .steam { animation: steam 2.2s ease-out infinite; }
-    .twinkle { animation: twinkle 2s ease-in-out infinite; }
-    .flicker { animation: flicker 3s steps(1) infinite; }
-    @keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
-    @keyframes steam { 0% { opacity: 0; transform: translateY(4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
-    @keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
-    @keyframes flicker { 0%,100% { opacity: 1; } 92% { opacity: .35; } 96% { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .sway, .steam, .twinkle, .flicker { animation: none; } }
+    .street3d { background: linear-gradient(180deg, #1a1220 0%, #3a2145 60%, #a8502e 100%); }
   </style>
 </head>
 
@@ -159,379 +138,11 @@
   </section>
 
   <!-- ============================================================
-       人來人往（街景動畫）
+       人來人往（3D 街景：路人逛街、進出店家）
        ============================================================ -->
-  <section aria-label="門市人來人往的街景" class="street relative h-48 sm:h-64 overflow-hidden"
-           x-data="{ people: Array.from({length: 14}, (_, i) => {
-             const rtl = i % 2 === 1, d = i % 3;
-             return {
-               rtl,
-               scale: [0.8, 1, 1.2][d],
-               bottom: [14, 8, 2][d],
-               dur: 16 + ((i * 7) % 15),
-               delay: -((i * 5.3) % 24),
-               x: (i * 37) % 100,
-               color: ['#E0823A','#F3EADB','#C2662A','#8A4B22','#FBF6EE','#d9a066'][i % 6],
-               skin: ['#f1c9a5','#e0a97d','#c68863'][i % 3]
-             };
-           }) }">
-    <p class="absolute bottom-1.5 left-4 z-20 text-[10px] tracking-[0.3em] text-cream/50 sm:left-6 sm:text-xs">BUSTLING DAILY · 每天都有人排隊的好味道</p>
-    <!-- 商店街景（在行人後方） -->
-    <svg class="pointer-events-none absolute inset-x-0 top-0 h-[66%] w-full" viewBox="0 0 1200 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-      <defs>
-<radialGradient id="lampGlow"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".75"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>
-<linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
-<pattern id="brick" width="14" height="8" patternUnits="userSpaceOnUse"><rect width="14" height="8" fill="none"/><path d="M0 .5H14M0 4.5H14M3.5 .5V4.5M10.5 4.5V8.5" stroke="#000" stroke-opacity=".22" stroke-width=".8"/></pattern>
-<pattern id="wood" width="9" height="150" patternUnits="userSpaceOnUse"><path d="M.5 0V150" stroke="#000" stroke-opacity=".25" stroke-width=".8"/></pattern>
-</defs>
-      <g fill="#241912" opacity=".9"><rect x="330" y="30" width="30" height="120"/><rect x="540" y="40" width="30" height="110"/><rect x="830" y="34" width="30" height="116"/><rect x="1040" y="26" width="60" height="124"/></g>
-      <rect x="0" y="40" width="62" height="110" fill="#2f3b4a"/><rect x="0" y="40" width="62" height="110" fill="url(#brick)"/>
-      <rect x="8" y="50" width="20" height="22" fill="#1d130c"/>
-      <rect x="10" y="52" width="16" height="18" fill="#ffd9a0" opacity="0.7"/>
-      <path d="M18.0 52v18M10 61.0h16" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="6" y="72" width="24" height="3" fill="#00000055"/>
-      <rect x="34" y="50" width="20" height="22" fill="#1d130c"/>
-      <rect x="36" y="52" width="16" height="18" fill="#9fc4d8" opacity="0.5"/>
-      <path d="M44.0 52v18M36 61.0h16" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="32" y="72" width="24" height="3" fill="#00000055"/>
-      <rect x="8" y="82" width="20" height="22" fill="#1d130c"/>
-      <rect x="10" y="84" width="16" height="18" fill="#ffd9a0" opacity="0.55"/>
-      <path d="M18.0 84v18M10 93.0h16" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="6" y="104" width="24" height="3" fill="#00000055"/>
-      <rect x="34" y="82" width="20" height="22" fill="#1d130c"/>
-      <rect x="36" y="84" width="16" height="18" fill="#ffd9a0" opacity="0.8"/>
-      <path d="M44.0 84v18M36 93.0h16" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="32" y="104" width="24" height="3" fill="#00000055"/>
-      <rect x="0" y="116" width="62" height="34" fill="#202a36"/><rect x="8" y="120" width="46" height="30" fill="#ffd9a0" opacity=".45"/>
-      <rect x="100" y="30" width="230" height="120" fill="#2f4a46"/><rect x="100" y="30" width="230" height="120" fill="url(#brick)"/>
-      <rect x="96" y="26" width="238" height="7" fill="#3f6460"/><rect x="96" y="33" width="238" height="2" fill="#00000050"/>
-      <rect x="120" y="40" width="38" height="34" fill="#1d130c"/>
-      <rect x="122" y="42" width="34" height="30" fill="#ffd9a0" opacity="0.8"/>
-      <path d="M122 42h11.899999999999999q-3.4000000000000004 15.0 0 30H122z M156 42h-11.899999999999999q3.4000000000000004 15.0 0 30H156z" fill="#e7c9a0" opacity=".85"/>
-      <path d="M139.0 42v30M122 57.0h34" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="118" y="74" width="42" height="3" fill="#00000055"/>
-      <rect x="196" y="40" width="38" height="34" fill="#1d130c"/>
-      <rect x="198" y="42" width="34" height="30" fill="#ffd9a0" opacity="0.8"/>
-      <path d="M198 42h11.899999999999999q-3.4000000000000004 15.0 0 30H198z M232 42h-11.899999999999999q3.4000000000000004 15.0 0 30H232z" fill="#e7c9a0" opacity=".85"/>
-      <path d="M215.0 42v30M198 57.0h34" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="194" y="74" width="42" height="3" fill="#00000055"/>
-      <rect x="272" y="40" width="38" height="34" fill="#1d130c"/>
-      <rect x="274" y="42" width="34" height="30" fill="#ffd9a0" opacity="0.8"/>
-      <path d="M274 42h11.899999999999999q-3.4000000000000004 15.0 0 30H274z M308 42h-11.899999999999999q3.4000000000000004 15.0 0 30H308z" fill="#e7c9a0" opacity=".85"/>
-      <path d="M291.0 42v30M274 57.0h34" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="270" y="74" width="42" height="3" fill="#00000055"/>
-      <rect x="244" y="78" width="22" height="12" rx="2" fill="#9aa5a5"/><path d="M247 84h16" stroke="#566" stroke-width="1"/>
-      <rect x="290" y="74" width="30" height="6" fill="#00000040"/>
-      <rect x="100.0" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M100.0 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="114.4" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M114.4 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="128.8" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M128.8 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="143.1" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M143.1 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="157.5" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M157.5 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="171.9" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M171.9 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="186.2" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M186.2 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="200.6" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M200.6 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="215.0" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M215.0 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="229.4" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M229.4 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="243.8" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M243.8 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="258.1" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M258.1 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="272.5" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M272.5 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="286.9" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M286.9 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="301.2" y="82" width="14.7" height="14" fill="#4f8f86"/>
-      <path d="M301.2 96a7.2 5.5 0 0 0 14.4 0z" fill="#4f8f86"/>
-      <rect x="315.6" y="82" width="14.7" height="14" fill="#f3eadb"/>
-      <path d="M315.6 96a7.2 5.5 0 0 0 14.4 0z" fill="#f3eadb"/>
-      <rect x="100" y="80" width="230" height="3" fill="#00000040"/>
-      <text x="215.0" y="92" text-anchor="middle" font-size="9" font-weight="700" fill="#1f3a36" font-family="'Noto Serif TC',serif">手搖茶飲 · 現泡現搖</text>
-      <rect x="108" y="100" width="130" height="50" fill="#1a2a28"/>
-      <rect x="110" y="102" width="126" height="42" fill="#1d130c"/>
-      <rect x="112" y="104" width="122" height="38" fill="#fff0cf" opacity="0.9"/>
-      <path d="M173.0 104v38M112 123.0h122" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="108" y="144" width="130" height="3" fill="#00000055"/>
-      <rect x="122" y="118" width="11" height="20" rx="2" fill="#e0823a"/><rect x="123" y="110" width="9" height="9" rx="2" fill="#fff" opacity=".6"/><path d="M129 118l3 -12" stroke="#c62828" stroke-width="1.4"/>
-      <rect x="140" y="116" width="11" height="20" rx="2" fill="#a5d6a7"/><rect x="141" y="108" width="9" height="9" rx="2" fill="#fff" opacity=".6"/><path d="M147 116l3 -12" stroke="#c62828" stroke-width="1.4"/>
-      <rect x="158" y="118" width="11" height="20" rx="2" fill="#f4a6b8"/><rect x="159" y="110" width="9" height="9" rx="2" fill="#fff" opacity=".6"/><path d="M165 118l3 -12" stroke="#c62828" stroke-width="1.4"/>
-      <rect x="176" y="116" width="11" height="20" rx="2" fill="#ffe08a"/><rect x="177" y="108" width="9" height="9" rx="2" fill="#fff" opacity=".6"/><path d="M183 116l3 -12" stroke="#c62828" stroke-width="1.4"/>
-      <rect x="196" y="110" width="32" height="26" rx="2" fill="#2b2b2b"/><text x="212" y="121" text-anchor="middle" font-size="6.5" fill="#ffe08a" font-family="'Noto Serif TC',serif">茶單</text><path d="M201 126h22M201 131h18" stroke="#ffe08a" stroke-width="1" opacity=".7"/>
-      <rect x="248" y="100" width="40" height="50" fill="#1a2a28"/><rect x="251" y="103" width="34" height="47" fill="#9fd4cc" opacity=".55"/><path d="M268 103v47" stroke="#1a2a28" stroke-width="1.5"/><rect x="264" y="124" width="2" height="9" fill="#e7b04a"/><rect x="270" y="124" width="2" height="9" fill="#e7b04a"/>
-      <g class="flicker"><rect x="296" y="104" width="26" height="14" rx="3" fill="#2b0f1a" stroke="#ff4f81" stroke-width="1.4"/><text x="309" y="114" text-anchor="middle" font-size="7" font-weight="700" fill="#ff7aa2">OPEN</text></g>
-      <rect x="296" y="126" width="26" height="24" fill="#3f6460"/><ellipse cx="309" cy="124" rx="11" ry="7" fill="#4caf50"/><ellipse cx="305" cy="121" rx="6" ry="5" fill="#66bb6a"/>
-      <path d="M86 82v26" stroke="#1d130c" stroke-width="1.5"/><rect x="74" y="104" width="24" height="14" rx="2" fill="#4f8f86" stroke="#f3eadb" stroke-width="1"/><text x="86" y="114" text-anchor="middle" font-size="8" fill="#fff" font-family="'Noto Serif TC',serif">茶</text>
-      <rect x="360" y="44" width="180" height="106" fill="#5a3b2a"/><rect x="360" y="44" width="180" height="106" fill="url(#wood)"/>
-      <rect x="356" y="40" width="188" height="6" fill="#7a5238"/>
-      <rect x="370" y="52" width="160" height="16" rx="2" fill="#2b1810" stroke="#e7b04a" stroke-width="1"/><text x="450.0" y="64" text-anchor="middle" font-size="12" font-weight="900" fill="#ffd27a" font-family="'Noto Serif TC',serif">古早味小吃</text>
-      <rect x="360.0" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M360.0 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="373.8" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M373.8 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="387.7" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M387.7 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="401.5" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M401.5 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="415.4" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M415.4 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="429.2" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M429.2 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="443.1" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M443.1 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="456.9" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M456.9 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="470.8" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M470.8 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="484.6" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M484.6 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="498.5" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M498.5 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="512.3" y="72" width="14.1" height="12" fill="#f3eadb"/>
-      <path d="M512.3 84a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="526.2" y="72" width="14.1" height="12" fill="#b5483a"/>
-      <path d="M526.2 84a6.9 5.3 0 0 0 13.8 0z" fill="#b5483a"/>
-      <rect x="360" y="70" width="180" height="3" fill="#00000040"/>
-      <rect x="368" y="88" width="84" height="62" fill="#2b1810"/>
-      <rect x="370" y="90" width="80" height="44" fill="#1d130c"/>
-      <rect x="372" y="92" width="76" height="40" fill="#ffd9a0" opacity="0.9"/>
-      <path d="M410.0 92v40M372 112.0h76" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="368" y="134" width="84" height="3" fill="#00000055"/>
-      <ellipse cx="390" cy="128" rx="13" ry="4.5" fill="#c9a36b"/><ellipse cx="390" cy="123" rx="12" ry="4.5" fill="#d9b67c"/><ellipse cx="390" cy="118" rx="11" ry="4" fill="#e6c68e"/>
-      <path class="steam" style="animation-delay:0.0s" d="M386 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:0.5s" d="M393 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <ellipse cx="414" cy="128" rx="13" ry="4.5" fill="#c9a36b"/><ellipse cx="414" cy="123" rx="12" ry="4.5" fill="#d9b67c"/><ellipse cx="414" cy="118" rx="11" ry="4" fill="#e6c68e"/>
-      <path class="steam" style="animation-delay:0.7s" d="M410 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:1.2s" d="M417 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <ellipse cx="438" cy="128" rx="13" ry="4.5" fill="#c9a36b"/><ellipse cx="438" cy="123" rx="12" ry="4.5" fill="#d9b67c"/><ellipse cx="438" cy="118" rx="11" ry="4" fill="#e6c68e"/>
-      <path class="steam" style="animation-delay:1.4s" d="M434 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:1.9s" d="M441 112q-3 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <rect x="460" y="90" width="26" height="36" fill="#f3eadb"/><path d="M464 98h18M464 104h18M464 110h14M464 116h18" stroke="#8a4b22" stroke-width="1.2"/><text x="473" y="95" text-anchor="middle" font-size="5" fill="#b5483a" font-family="'Noto Serif TC',serif">MENU</text>
-      <rect x="492" y="90" width="38" height="60" fill="#3a2418"/><rect x="496" y="94" width="30" height="56" fill="#ffd9a0" opacity=".45"/><circle cx="522" cy="124" r="1.6" fill="#e7b04a"/>
-      <path d="M358 84v14l5 -4 5 4v-14z" fill="#b5483a"/>
-      <g class="sway"><line x1="382" y1="33.6" x2="382" y2="40" stroke="#1d130c" stroke-width="1"/><rect x="379.6" y="40" width="4.800000000000001" height="2" fill="#7a1a12"/><ellipse cx="382" cy="45.6" rx="5.2" ry="5.6000000000000005" fill="#d12f24"/><ellipse cx="382" cy="45.6" rx="2.0" ry="5.6000000000000005" fill="#f0584a" opacity=".6"/><rect x="379.6" y="50.4" width="4.800000000000001" height="2" fill="#7a1a12"/><path d="M382 52.0v4.0M380.8 52.0v3.2M383.2 52.0v3.2" stroke="#e7b04a" stroke-width="1"/></g>
-      <g class="sway"><line x1="518" y1="33.6" x2="518" y2="40" stroke="#1d130c" stroke-width="1"/><rect x="515.6" y="40" width="4.800000000000001" height="2" fill="#7a1a12"/><ellipse cx="518" cy="45.6" rx="5.2" ry="5.6000000000000005" fill="#d12f24"/><ellipse cx="518" cy="45.6" rx="2.0" ry="5.6000000000000005" fill="#f0584a" opacity=".6"/><rect x="515.6" y="50.4" width="4.800000000000001" height="2" fill="#7a1a12"/><path d="M518 52.0v4.0M516.8 52.0v3.2M519.2 52.0v3.2" stroke="#e7b04a" stroke-width="1"/></g>
-      <rect x="570" y="30" width="260" height="120" fill="#3B2A1E"/><rect x="570" y="30" width="260" height="120" fill="url(#wood)"/>
-      <path d="M562 30L580 12H820L838 30z" fill="#6b3a22"/>
-      <path d="M565.6 15.6H834.4" stroke="#00000055" stroke-width="1"/>
-      <path d="M569.2 19.2H830.8" stroke="#00000055" stroke-width="1"/>
-      <path d="M572.8 22.8H827.2" stroke="#00000055" stroke-width="1"/>
-      <path d="M576.4 26.4H823.6" stroke="#00000055" stroke-width="1"/>
-      <path d="M576 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M588 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M600 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M612 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M624 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M636 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M648 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M660 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M672 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M684 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M696 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M708 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M720 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M732 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M744 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M756 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M768 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M780 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M792 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M804 12V30" stroke="#00000022" stroke-width="1"/>
-      <path d="M816 12V30" stroke="#00000022" stroke-width="1"/>
-      <rect x="561" y="28" width="278" height="4" fill="#1d130c"/>
-      <rect x="572" y="30" width="256" height="2" fill="#E0823A"/>
-      <rect x="584" y="36" width="232" height="28" rx="3" fill="#20140c" stroke="#E0823A" stroke-width="2"/><rect x="588" y="40" width="224" height="20" rx="2" fill="none" stroke="#ffc977" stroke-width=".8" stroke-dasharray="3 2"/>
-      <text x="700.0" y="55" text-anchor="middle" font-size="19" font-weight="900" fill="#ffc977" font-family="'Noto Serif TC',serif">金脆鍋貼</text>
-      <text x="700.0" y="62" text-anchor="middle" font-size="4.6" letter-spacing="2" fill="#E0823A">GOLDEN CRISP GYOZA · SINCE 1994</text>
-      <rect x="578" y="68" width="244" height="3" fill="#1d130c"/>
-      <path d="M580.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M580.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M610.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M610.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M640.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M640.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M670.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M670.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M700.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M700.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M730.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M730.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M760.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M760.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <path d="M790.0 71h28.5v18h-28.5z" fill="#c2662a"/><path d="M790.0 71h28.5v18h-28.5z" fill="url(#shade)" opacity=".4"/>
-      <text x="700.0" y="85" text-anchor="middle" font-size="10" font-weight="900" fill="#fbf6ee" font-family="'Noto Serif TC',serif" letter-spacing="3">現煎 · 熱呼呼</text>
-      <rect x="580" y="94" width="150" height="56" fill="#150d08"/>
-      <rect x="582" y="96" width="146" height="42" fill="#150d08"/>
-      <rect x="584" y="98" width="142" height="38" fill="#ffcf80" opacity="0.9"/>
-      <path d="M655.0 98v38M584 117.0h142" stroke="#150d08" stroke-width="1.6"/>
-      <rect x="580" y="138" width="150" height="3" fill="#00000055"/>
-      <rect x="584" y="122" width="142" height="14" fill="#3a3a3a"/><rect x="584" y="122" width="142" height="3" fill="#555"/>
-      <ellipse cx="610" cy="120" rx="18" ry="5" fill="#2a2a2a" stroke="#888" stroke-width=".8"/><ellipse cx="610" cy="119" rx="15" ry="3.6" fill="#e0a84a"/>
-      <path d="M598 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M604 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M610 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M616 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M622 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path class="steam" style="animation-delay:0.0s" d="M605 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:0.5s" d="M615 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <ellipse cx="654" cy="120" rx="18" ry="5" fill="#2a2a2a" stroke="#888" stroke-width=".8"/><ellipse cx="654" cy="119" rx="15" ry="3.6" fill="#e0a84a"/>
-      <path d="M642 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M648 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M654 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M660 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M666 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path class="steam" style="animation-delay:0.6s" d="M649 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:1.1s" d="M659 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <ellipse cx="698" cy="120" rx="18" ry="5" fill="#2a2a2a" stroke="#888" stroke-width=".8"/><ellipse cx="698" cy="119" rx="15" ry="3.6" fill="#e0a84a"/>
-      <path d="M686 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M692 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M698 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M704 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path d="M710 119q3 -6 6 0z" fill="#f2c15c" stroke="#a8691e" stroke-width=".5"/>
-      <path class="steam" style="animation-delay:1.2s" d="M693 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path class="steam" style="animation-delay:1.7s" d="M703 112q-4 -6 0 -11t0 -9" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <rect x="584" y="136" width="142" height="14" fill="#6b3a22"/><text x="655" y="146" text-anchor="middle" font-size="7.5" fill="#ffe0b0" font-family="'Noto Serif TC',serif">豬肉 · 韭菜 · 牛肉　現點現煎</text>
-      <rect x="740" y="94" width="38" height="50" rx="2" fill="#20140c" stroke="#E0823A" stroke-width="1.2"/><text x="759" y="105" text-anchor="middle" font-size="7" font-weight="700" fill="#ffc977" font-family="'Noto Serif TC',serif">菜單</text>
-      <text x="744" y="114" font-size="5.5" fill="#fbf6ee" font-family="'Noto Serif TC',serif">豬肉</text><text x="775" y="114" text-anchor="end" font-size="5.5" fill="#E0823A">$95</text><path d="M744 116h31" stroke="#fff" stroke-opacity=".2" stroke-width=".5"/>
-      <text x="744" y="122" font-size="5.5" fill="#fbf6ee" font-family="'Noto Serif TC',serif">韭菜</text><text x="775" y="122" text-anchor="end" font-size="5.5" fill="#E0823A">$95</text><path d="M744 124h31" stroke="#fff" stroke-opacity=".2" stroke-width=".5"/>
-      <text x="744" y="130" font-size="5.5" fill="#fbf6ee" font-family="'Noto Serif TC',serif">牛肉</text><text x="775" y="130" text-anchor="end" font-size="5.5" fill="#E0823A">$110</text><path d="M744 132h31" stroke="#fff" stroke-opacity=".2" stroke-width=".5"/>
-      <text x="744" y="138" font-size="5.5" fill="#fbf6ee" font-family="'Noto Serif TC',serif">酸辣湯</text><text x="775" y="138" text-anchor="end" font-size="5.5" fill="#E0823A">$40</text><path d="M744 140h31" stroke="#fff" stroke-opacity=".2" stroke-width=".5"/>
-      <rect x="786" y="94" width="34" height="56" fill="#150d08"/><rect x="789" y="97" width="28" height="53" fill="#ffd9a0" opacity=".4"/><rect x="802" y="97" width="2" height="53" fill="#150d08"/><rect x="796" y="122" width="2" height="9" fill="#e7b04a"/><rect x="808" y="122" width="2" height="9" fill="#e7b04a"/>
-      <g stroke="#e7b04a" stroke-width="1.4"><path d="M782 150v-12M832 150v-12"/></g><path d="M782 140q25 5 50 0" stroke="#c62828" stroke-width="1.6" fill="none"/>
-      <g class="sway"><line x1="556" y1="25.2" x2="556" y2="34" stroke="#1d130c" stroke-width="1"/><rect x="552.7" y="34" width="6.6000000000000005" height="2" fill="#7a1a12"/><ellipse cx="556" cy="41.7" rx="7.15" ry="7.700000000000001" fill="#d12f24"/><ellipse cx="556" cy="41.7" rx="2.75" ry="7.700000000000001" fill="#f0584a" opacity=".6"/><rect x="552.7" y="48.3" width="6.6000000000000005" height="2" fill="#7a1a12"/><path d="M556 50.5v5.5M554.35 50.5v4.4M557.65 50.5v4.4" stroke="#e7b04a" stroke-width="1"/></g>
-      <g class="sway"><line x1="844" y1="25.2" x2="844" y2="34" stroke="#1d130c" stroke-width="1"/><rect x="840.7" y="34" width="6.6000000000000005" height="2" fill="#7a1a12"/><ellipse cx="844" cy="41.7" rx="7.15" ry="7.700000000000001" fill="#d12f24"/><ellipse cx="844" cy="41.7" rx="2.75" ry="7.700000000000001" fill="#f0584a" opacity=".6"/><rect x="840.7" y="48.3" width="6.6000000000000005" height="2" fill="#7a1a12"/><path d="M844 50.5v5.5M842.35 50.5v4.4M845.65 50.5v4.4" stroke="#e7b04a" stroke-width="1"/></g>
-      <g class="sway"><line x1="604" y1="16.4" x2="604" y2="22" stroke="#1d130c" stroke-width="1"/><rect x="601.9" y="22" width="4.199999999999999" height="2" fill="#7a1a12"/><ellipse cx="604" cy="26.9" rx="4.55" ry="4.8999999999999995" fill="#d12f24"/><ellipse cx="604" cy="26.9" rx="1.75" ry="4.8999999999999995" fill="#f0584a" opacity=".6"/><rect x="601.9" y="31.1" width="4.199999999999999" height="2" fill="#7a1a12"/><path d="M604 32.5v3.5M602.95 32.5v2.8M605.05 32.5v2.8" stroke="#e7b04a" stroke-width="1"/></g>
-      <g class="sway"><line x1="796" y1="16.4" x2="796" y2="22" stroke="#1d130c" stroke-width="1"/><rect x="793.9" y="22" width="4.199999999999999" height="2" fill="#7a1a12"/><ellipse cx="796" cy="26.9" rx="4.55" ry="4.8999999999999995" fill="#d12f24"/><ellipse cx="796" cy="26.9" rx="1.75" ry="4.8999999999999995" fill="#f0584a" opacity=".6"/><rect x="793.9" y="31.1" width="4.199999999999999" height="2" fill="#7a1a12"/><path d="M796 32.5v3.5M794.95 32.5v2.8M797.05 32.5v2.8" stroke="#e7b04a" stroke-width="1"/></g>
-      <rect x="860" y="34" width="180" height="116" fill="#3d3a5a"/><rect x="860" y="34" width="180" height="116" fill="url(#brick)"/>
-      <rect x="856" y="30" width="188" height="6" fill="#55527a"/>
-      <rect x="870" y="42" width="8" height="28" fill="#6b64a3"/><rect x="902" y="42" width="8" height="28" fill="#6b64a3"/>
-      <rect x="876" y="42" width="28" height="28" fill="#1d130c"/>
-      <rect x="878" y="44" width="24" height="24" fill="#ffd9a0" opacity="0.7"/>
-      <path d="M890.0 44v24M878 56.0h24" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="874" y="70" width="32" height="3" fill="#00000055"/>
-      <path d="M870 48h8M870 54h8M870 60h8M902 48h8M902 54h8M902 60h8" stroke="#00000050" stroke-width="1"/>
-      <rect x="930" y="42" width="8" height="28" fill="#6b64a3"/><rect x="962" y="42" width="8" height="28" fill="#6b64a3"/>
-      <rect x="936" y="42" width="28" height="28" fill="#1d130c"/>
-      <rect x="938" y="44" width="24" height="24" fill="#ffd9a0" opacity="0.7"/>
-      <path d="M950.0 44v24M938 56.0h24" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="934" y="70" width="32" height="3" fill="#00000055"/>
-      <path d="M930 48h8M930 54h8M930 60h8M962 48h8M962 54h8M962 60h8" stroke="#00000050" stroke-width="1"/>
-      <rect x="990" y="42" width="8" height="28" fill="#6b64a3"/><rect x="1022" y="42" width="8" height="28" fill="#6b64a3"/>
-      <rect x="996" y="42" width="28" height="28" fill="#1d130c"/>
-      <rect x="998" y="44" width="24" height="24" fill="#ffd9a0" opacity="0.7"/>
-      <path d="M1010.0 44v24M998 56.0h24" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="994" y="70" width="32" height="3" fill="#00000055"/>
-      <path d="M990 48h8M990 54h8M990 60h8M1022 48h8M1022 54h8M1022 60h8" stroke="#00000050" stroke-width="1"/>
-      <rect x="890" y="76" width="120" height="14" rx="2" fill="#2b2845" stroke="#c7bff5" stroke-width="1"/><text x="950" y="87" text-anchor="middle" font-size="9.5" font-weight="900" fill="#e8e2ff" font-family="'Noto Serif TC',serif">冷凍禮盒 · 伴手禮</text>
-      <rect x="860.0" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M860.0 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="873.8" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M873.8 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="887.7" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M887.7 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="901.5" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M901.5 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="915.4" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M915.4 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="929.2" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M929.2 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="943.1" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M943.1 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="956.9" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M956.9 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="970.8" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M970.8 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="984.6" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M984.6 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="998.5" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M998.5 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="1012.3" y="92" width="14.1" height="10" fill="#f3eadb"/>
-      <path d="M1012.3 102a6.9 5.3 0 0 0 13.8 0z" fill="#f3eadb"/>
-      <rect x="1026.2" y="92" width="14.1" height="10" fill="#7a6fb0"/>
-      <path d="M1026.2 102a6.9 5.3 0 0 0 13.8 0z" fill="#7a6fb0"/>
-      <rect x="860" y="90" width="180" height="3" fill="#00000040"/>
-      <rect x="868" y="106" width="104" height="44" fill="#201d36"/>
-      <rect x="870" y="108" width="100" height="38" fill="#201d36"/>
-      <rect x="872" y="110" width="96" height="34" fill="#fff0cf" opacity="0.9"/>
-      <path d="M920.0 110v34M872 127.0h96" stroke="#201d36" stroke-width="1.6"/>
-      <rect x="868" y="146" width="104" height="3" fill="#00000055"/>
-      <rect x="876" y="126" width="28" height="18" fill="#c2662a"/><path d="M890.0 126v18M876 135.0h28" stroke="#fbf6ee" stroke-width="1.3"/><path d="M890.0 126q-5 -6 -7 -1M890.0 126q5 -6 7 -1" stroke="#fbf6ee" stroke-width="1.1" fill="none"/>
-      <rect x="908" y="120" width="26" height="24" fill="#b5483a"/><path d="M921.0 120v24M908 132.0h26" stroke="#fbf6ee" stroke-width="1.3"/><path d="M921.0 120q-5 -6 -7 -1M921.0 120q5 -6 7 -1" stroke="#fbf6ee" stroke-width="1.1" fill="none"/>
-      <rect x="938" y="128" width="26" height="16" fill="#4f8f86"/><path d="M951.0 128v16M938 136.0h26" stroke="#fbf6ee" stroke-width="1.3"/><path d="M951.0 128q-5 -6 -7 -1M951.0 128q5 -6 7 -1" stroke="#fbf6ee" stroke-width="1.1" fill="none"/>
-      <rect x="884" y="116" width="18" height="10" fill="#e7b04a"/><path d="M893.0 116v10M884 121.0h18" stroke="#fbf6ee" stroke-width="1.3"/><path d="M893.0 116q-5 -6 -7 -1M893.0 116q5 -6 7 -1" stroke="#fbf6ee" stroke-width="1.1" fill="none"/>
-      <rect x="982" y="106" width="46" height="44" fill="#201d36"/><rect x="985" y="109" width="40" height="41" fill="#c7bff5" opacity=".35"/><path d="M1005 109v41" stroke="#201d36" stroke-width="1.5"/>
-      <rect x="862" y="136" width="8" height="14" fill="#6b3a22"/><ellipse cx="866" cy="134" rx="7" ry="6" fill="#4caf50"/>
-      <rect x="1100" y="46" width="100" height="104" fill="#2f3b4a"/><rect x="1100" y="46" width="100" height="104" fill="url(#brick)"/>
-      <rect x="1100" y="86" width="100" height="14" fill="#e8f0f2"/><rect x="1100" y="96" width="100" height="4" fill="#2a8f5f"/><text x="1150" y="96" text-anchor="middle" font-size="8.5" font-weight="900" fill="#1f6f48" font-family="'Noto Serif TC',serif">24H 便利</text>
-      <rect x="1110" y="52" width="28" height="24" fill="#1d130c"/>
-      <rect x="1112" y="54" width="24" height="20" fill="#ffd9a0" opacity="0.7"/>
-      <path d="M1124.0 54v20M1112 64.0h24" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="1108" y="76" width="32" height="3" fill="#00000055"/>
-      <rect x="1150" y="52" width="28" height="24" fill="#1d130c"/>
-      <rect x="1152" y="54" width="24" height="20" fill="#9fc4d8" opacity="0.55"/>
-      <path d="M1164.0 54v20M1152 64.0h24" stroke="#1d130c" stroke-width="1.6"/>
-      <rect x="1148" y="76" width="32" height="3" fill="#00000055"/>
-      <rect x="1106" y="104" width="88" height="46" fill="#cfe9e4" opacity=".75"/><path d="M1150 104v46" stroke="#2f3b4a" stroke-width="2"/><path d="M1114 140h26M1160 140h26" stroke="#fff" stroke-width="3" opacity=".5"/>
-      <path d="M70 22Q200.0 50 330 22" fill="none" stroke="#1d130c" stroke-width="1"/>
-      <circle class="twinkle" style="animation-delay:0.35s" cx="90.0" cy="28.0" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.70s" cx="110.0" cy="31.3" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.05s" cx="130.0" cy="33.9" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:1.40s" cx="150.0" cy="35.9" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.75s" cx="170.0" cy="37.3" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.10s" cx="190.0" cy="37.9" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:0.45s" cx="210.0" cy="37.9" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:0.80s" cx="230.0" cy="37.3" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.15s" cx="250.0" cy="35.9" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:1.50s" cx="270.0" cy="33.9" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.85s" cx="290.0" cy="31.3" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:0.20s" cx="310.0" cy="28.0" r="2.1" fill="#ffd27a"/>
-      <path d="M330 18Q450.0 46 570 18" fill="none" stroke="#1d130c" stroke-width="1"/>
-      <circle class="twinkle" style="animation-delay:0.35s" cx="350.0" cy="24.3" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.70s" cx="370.0" cy="27.8" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.05s" cx="390.0" cy="30.5" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:1.40s" cx="410.0" cy="32.4" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.75s" cx="430.0" cy="33.6" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.10s" cx="450.0" cy="34.0" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:0.45s" cx="470.0" cy="33.6" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:0.80s" cx="490.0" cy="32.4" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.15s" cx="510.0" cy="30.5" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:1.50s" cx="530.0" cy="27.8" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.85s" cx="550.0" cy="24.3" r="2.1" fill="#9be7c8"/>
-      <path d="M830 20Q955.0 48 1080 20" fill="none" stroke="#1d130c" stroke-width="1"/>
-      <circle class="twinkle" style="animation-delay:0.35s" cx="850.8" cy="26.3" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.70s" cx="871.7" cy="29.8" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.05s" cx="892.5" cy="32.5" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:1.40s" cx="913.3" cy="34.4" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.75s" cx="934.2" cy="35.6" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:0.10s" cx="955.0" cy="36.0" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:0.45s" cx="975.8" cy="35.6" r="2.1" fill="#9be7c8"/>
-      <circle class="twinkle" style="animation-delay:0.80s" cx="996.7" cy="34.4" r="2.1" fill="#ffd27a"/>
-      <circle class="twinkle" style="animation-delay:1.15s" cx="1017.5" cy="32.5" r="2.1" fill="#ff8a65"/>
-      <circle class="twinkle" style="animation-delay:1.50s" cx="1038.3" cy="29.8" r="2.1" fill="#fff3c4"/>
-      <circle class="twinkle" style="animation-delay:1.85s" cx="1059.2" cy="26.3" r="2.1" fill="#9be7c8"/>
-      <circle cx="70" cy="28" r="30" fill="url(#lampGlow)"/><rect x="68" y="32" width="4" height="118" fill="#1d130c"/><path d="M61 30h18l-3 -8h-12z" fill="#1d130c"/><rect x="65" y="28" width="10" height="3" fill="#ffd9a0"/>
-      <circle cx="1080" cy="28" r="30" fill="url(#lampGlow)"/><rect x="1078" y="32" width="4" height="118" fill="#1d130c"/><path d="M1071 30h18l-3 -8h-12z" fill="#1d130c"/><rect x="1075" y="28" width="10" height="3" fill="#ffd9a0"/>
-      <g transform="translate(342 128)"><circle cx="4" cy="18" r="5" fill="#111" stroke="#555" stroke-width="1.2"/><circle cx="32" cy="18" r="5" fill="#111" stroke="#555" stroke-width="1.2"/><path d="M4 18L10 8H24l8 10" fill="none" stroke="#111" stroke-width="1.6"/><path d="M8 10q6 -7 18 -6l5 8H8z" fill="#c62828"/><path d="M26 4l4 -4h5" stroke="#111" stroke-width="1.6" fill="none"/><rect x="12" y="2" width="12" height="4" rx="2" fill="#2b2b2b"/></g>
-      <g transform="translate(842 128)"><circle cx="4" cy="18" r="5" fill="#111" stroke="#555" stroke-width="1.2"/><circle cx="32" cy="18" r="5" fill="#111" stroke="#555" stroke-width="1.2"/><path d="M4 18L10 8H24l8 10" fill="none" stroke="#111" stroke-width="1.6"/><path d="M8 10q6 -7 18 -6l5 8H8z" fill="#1565c0"/><path d="M26 4l4 -4h5" stroke="#111" stroke-width="1.6" fill="none"/><rect x="12" y="2" width="12" height="4" rx="2" fill="#2b2b2b"/></g>
-      <g transform="translate(548 132)" stroke="#111" fill="none" stroke-width="1.4"><circle cx="5" cy="14" r="7"/><circle cx="25" cy="14" r="7"/><path d="M5 14L12 4h9l4 10M12 4l5 10h8M21 4l-2 -3h-4"/></g>
-      <rect x="0" y="144" width="1200" height="6" fill="#00000055"/>
-    </svg>
-    <!-- 人行道 -->
-    <div class="pointer-events-none absolute inset-x-0 top-[66%] h-1 bg-cream/20"></div>
-    <template x-for="(p, i) in people" :key="i">
-      <div class="walker" :class="{ rtl: p.rtl }" aria-hidden="true"
-           :style="`bottom:${p.bottom}px; animation-duration:${p.dur}s; animation-delay:${p.delay}s; --x:${p.x}; z-index:${Math.round(10 - p.bottom)}`">
-        <svg class="figure" :style="`width:${24 * p.scale}px;height:${60 * p.scale}px`" viewBox="0 0 24 60" fill="none">
-          <g stroke="#6b4e38" stroke-width="5" stroke-linecap="round">
-            <line class="leg b" x1="12" y1="33" x2="12" y2="56"/>
-            <line class="leg a" x1="12" y1="33" x2="12" y2="56"/>
-          </g>
-          <rect x="5" y="14" width="14" height="22" rx="6" :fill="p.color"/>
-          <circle cx="12" cy="8" r="6" :fill="p.skin"/>
-        </svg>
-      </div>
-    </template>
+  <section aria-label="門市人來人往的 3D 街景" class="street3d relative h-[340px] sm:h-[460px] overflow-hidden">
+    <div id="street3d" class="absolute inset-0"></div>
+    <p class="pointer-events-none absolute bottom-2 left-4 z-10 text-[10px] tracking-[0.3em] text-cream/60 sm:left-6 sm:text-xs">BUSTLING DAILY · 每天都有人排隊的好味道</p>
   </section>
 
   <!-- ============================================================
@@ -1194,6 +805,784 @@
       }
     };
   }
+</script>
+<script>
+/* ============================================================
+   3D 街景：人來人往、進出店家（Three.js r128）
+   ============================================================ */
+(function () {
+  'use strict';
+
+  function boot() {
+    const host = document.getElementById('street3d');
+    if (!host || !window.THREE) return;
+    const T = THREE;
+
+    let renderer;
+    try {
+      renderer = new T.WebGLRenderer({ antialias: true });
+    } catch (e) { return; }
+
+    const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.domElement.style.cssText = 'display:block;width:100%;height:100%';
+    renderer.domElement.setAttribute('aria-hidden', 'true');
+    host.appendChild(renderer.domElement);
+
+    const scene = new T.Scene();
+    scene.background = new T.Color('#1a1220');
+    scene.fog = new T.Fog('#2a1a30', 28, 70);
+
+    const camera = new T.PerspectiveCamera(36, 2.5, 0.1, 200);
+
+    /* ---------- 小工具 ---------- */
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    function canvas(w, h) {
+      const c = document.createElement('canvas');
+      c.width = Math.max(2, Math.round(w)); c.height = Math.max(2, Math.round(h));
+      return c;
+    }
+    function tex(c, opts) {
+      const t = new T.CanvasTexture(c);
+      t.anisotropy = 4;
+      if (opts && opts.repeat) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(opts.repeat[0], opts.repeat[1]); }
+      return t;
+    }
+    const SERIF = '"Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif';
+
+    /* ---------- 店家設定 ---------- */
+    const SHOPS = [
+      { w: 2.6, h: 3.9, name: '', wall: '#3a4656', trim: '#4a586c', mat: 'brick', upper: true, goods: 'shutter', doorX: 1.9, enter: 0 },
+      { w: 4.0, h: 4.4, name: '手搖茶飲', sub: '現泡現搖', wall: '#2f4a46', trim: '#3f6460', mat: 'brick', upper: true, goods: 'drinks', doorX: 3.1, enter: 0.3, awn: ['#4f8f86', '#f3eadb'], menu: true, neon: 'OPEN' },
+      { w: 3.2, h: 4.0, name: '古早味小吃', sub: '', wall: '#5a3b2a', trim: '#7a5238', mat: 'wood', upper: false, goods: 'steam', doorX: 2.5, enter: 0.3, awn: ['#b5483a', '#f3eadb'], menu: true },
+      { w: 5.0, h: 5.4, name: '金脆鍋貼', sub: 'GOLDEN CRISP GYOZA · SINCE 1994', wall: '#3B2A1E', trim: '#6b3a22', mat: 'wood', upper: false, goods: 'pan', doorX: 4.15, enter: 0.55, awn: ['#c2662a', '#fbf6ee'], menu: true, main: true },
+      { w: 3.4, h: 4.4, name: '冷凍禮盒 · 伴手禮', sub: '', wall: '#3d3a5a', trim: '#55527a', mat: 'brick', upper: true, goods: 'gifts', doorX: 2.65, enter: 0.3, awn: ['#7a6fb0', '#f3eadb'] },
+      { w: 3.6, h: 4.0, name: '蔥油餅 · 茶葉蛋', sub: '', wall: '#4a3a24', trim: '#6a5230', mat: 'wood', upper: false, goods: 'steam2', doorX: 2.8, enter: 0.3, awn: ['#e0a63a', '#fbf6ee'], menu: true },
+      { w: 2.8, h: 3.7, name: '24H 便利', sub: '', wall: '#2f3b4a', trim: '#e8f0f2', mat: 'brick', upper: false, goods: 'store', doorX: 2.05, enter: 0.35, store: true }
+    ];
+    const GAP = 0.06;
+    const TOTAL = SHOPS.reduce((s, d) => s + d.w, 0) + GAP * (SHOPS.length - 1);
+    const HALF = TOTAL / 2;
+    {
+      let x = -HALF;
+      SHOPS.forEach(d => { d.x0 = x; d.cx = x + d.w / 2; d.doorWX = x + d.doorX; x += d.w + GAP; });
+    }
+    const MAIN = SHOPS.find(s => s.main);
+    const DEPTH = 3.5, GT_H = 2.9; // 一樓高度
+
+    /* ---------- 貼圖繪製：店面 ---------- */
+    function txt(g, S, str, x, y, size, color, weight, align, spacing) {
+      g.save();
+      g.translate(x, y); g.scale(1 / S, 1 / S);
+      g.font = `${weight || 700} ${size * S}px ${SERIF}`;
+      g.fillStyle = color; g.textAlign = align || 'center'; g.textBaseline = 'middle';
+      if (spacing && 'letterSpacing' in g) g.letterSpacing = spacing + 'px';
+      g.fillText(str, 0, 0);
+      g.restore();
+    }
+    function winDraw(g, x, y, w, h, light, curtain) {
+      g.fillStyle = '#120b07'; g.fillRect(x - .05, y - .05, w + .1, h + .1);
+      g.fillStyle = light; g.fillRect(x, y, w, h);
+      const gr = g.createLinearGradient(0, y, 0, y + h);
+      gr.addColorStop(0, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(0,0,0,.18)');
+      g.fillStyle = gr; g.fillRect(x, y, w, h);
+      if (curtain) {
+        g.fillStyle = curtain; g.globalAlpha = .85;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + w * .36, y); g.quadraticCurveTo(x + w * .26, y + h * .5, x + w * .36, y + h); g.lineTo(x, y + h); g.fill();
+        g.beginPath(); g.moveTo(x + w, y); g.lineTo(x + w * .64, y); g.quadraticCurveTo(x + w * .74, y + h * .5, x + w * .64, y + h); g.lineTo(x + w, y + h); g.fill();
+        g.globalAlpha = 1;
+      }
+      g.strokeStyle = '#120b07'; g.lineWidth = .035;
+      g.beginPath(); g.moveTo(x + w / 2, y); g.lineTo(x + w / 2, y + h); g.moveTo(x, y + h / 2); g.lineTo(x + w, y + h / 2); g.stroke();
+      g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(x - .08, y + h + .04, w + .16, .06);
+    }
+    function ellipse(g, cx, cy, rx, ry, fill) {
+      g.fillStyle = fill; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fill();
+    }
+    function rrect(g, x, y, w, h, r, fill, stroke, lw) {
+      g.beginPath();
+      g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+      if (fill) { g.fillStyle = fill; g.fill(); }
+      if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw || .03; g.stroke(); }
+    }
+
+    const GOODS = {
+      drinks(g, S, x, y, w, h) {
+        g.fillStyle = '#fff0cf'; g.fillRect(x, y, w, h);
+        const ct = y + h * .66;
+        rrect(g, x + .1, y + .1, .85, .5, .04, '#2b2b2b');
+        txt(g, S, '茶單', x + .52, y + .22, .17, '#ffe08a', 700);
+        g.strokeStyle = 'rgba(255,224,138,.7)'; g.lineWidth = .02;
+        [.32, .4, .48].forEach(o => { g.beginPath(); g.moveTo(x + .2, y + .1 + o); g.lineTo(x + .85 - (o > .4 ? .2 : 0), y + .1 + o); g.stroke(); });
+        const cols = ['#e0823a', '#a5d6a7', '#f4a6b8', '#ffe08a', '#9fd4f0'];
+        const n = Math.max(2, Math.min(5, Math.floor((w - 1) / .42)));
+        for (let i = 0; i < n; i++) {
+          const cx = x + 1.15 + i * ((w - 1.45) / Math.max(1, n - 1));
+          rrect(g, cx - .13, ct - .5, .26, .5, .05, cols[i % 5]);
+          rrect(g, cx - .14, ct - .58, .28, .12, .04, '#fff', null);
+          g.strokeStyle = '#c62828'; g.lineWidth = .03; g.beginPath(); g.moveTo(cx + .05, ct - .58); g.lineTo(cx + .12, ct - .8); g.stroke();
+        }
+        g.fillStyle = '#8a5a34'; g.fillRect(x, ct, w, h - (ct - y));
+        g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(x, ct, w, .04);
+      },
+      steam(g, S, x, y, w, h) {
+        g.fillStyle = '#ffd9a0'; g.fillRect(x, y, w, h);
+        const ct = y + h * .7;
+        const n = Math.max(2, Math.floor(w / .75));
+        for (let i = 0; i < n; i++) {
+          const cx = x + (w / n) * (i + .5);
+          for (let k = 0; k < 3; k++) { ellipse(g, cx, ct - .1 - k * .17, .31 - k * .02, .1, ['#c9a36b', '#d9b67c', '#e6c68e'][k]); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(cx - .3 + k * .02, ct - .1 - k * .17, .6 - k * .04, .02); }
+        }
+        g.fillStyle = '#6b3a22'; g.fillRect(x, ct, w, h - (ct - y));
+        txt(g, S, '包子 · 饅頭 · 燒餅', x + w / 2, y + .22, .17, '#8a4b22', 700);
+      },
+      steam2(g, S, x, y, w, h) {
+        g.fillStyle = '#ffe2b0'; g.fillRect(x, y, w, h);
+        const ct = y + h * .68;
+        ellipse(g, x + w * .28, ct - .22, .42, .22, '#2b2b2b');
+        for (let i = 0; i < 8; i++) ellipse(g, x + w * .28 - .28 + (i % 4) * .19, ct - .3 + Math.floor(i / 4) * .13, .07, .09, '#8a4b22');
+        g.fillStyle = '#d9a64a';
+        for (let i = 0; i < 4; i++) rrect(g, x + w * .56 + i * .3, ct - .28 + (i % 2) * .05, .26, .26, .05, ['#e0a63a', '#c97a2a', '#e8b95a', '#d98d3a'][i]);
+        g.fillStyle = '#5a3b2a'; g.fillRect(x, ct, w, h - (ct - y));
+      },
+      pan(g, S, x, y, w, h) {
+        g.fillStyle = '#ffcf80'; g.fillRect(x, y, w, h);
+        const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,120,0,.2)');
+        g.fillStyle = gr; g.fillRect(x, y, w, h);
+        const ct = y + h * .62;
+        g.fillStyle = '#3a3a3a'; g.fillRect(x, ct, w, h * .38);
+        g.fillStyle = '#666'; g.fillRect(x, ct, w, .05);
+        g.fillStyle = 'rgba(255,90,0,.7)'; g.fillRect(x, y + h - .12, w, .06);
+        const n = 3;
+        for (let k = 0; k < n; k++) {
+          const cx = x + (w / n) * (k + .5);
+          ellipse(g, cx, ct + .02, .52, .15, '#222');
+          ellipse(g, cx, ct - .02, .47, .12, '#e0a84a');
+          for (let i = 0; i < 6; i++) {
+            const gx = cx - .36 + i * .145;
+            g.fillStyle = '#f2c15c'; g.strokeStyle = '#a8691e'; g.lineWidth = .015;
+            g.beginPath(); g.moveTo(gx - .06, ct); g.quadraticCurveTo(gx, ct - .16, gx + .06, ct); g.closePath(); g.fill(); g.stroke();
+          }
+        }
+        g.fillStyle = '#6b3a22'; g.fillRect(x, y + h - .3, w, .3);
+        txt(g, S, '豬肉 · 韭菜 · 牛肉　現點現煎', x + w / 2, y + h - .15, .15, '#ffe0b0', 700);
+      },
+      gifts(g, S, x, y, w, h) {
+        g.fillStyle = '#fff0cf'; g.fillRect(x, y, w, h);
+        const ct = y + h * .78;
+        const boxes = [[.1, .42, .55, '#c2662a'], [.72, .5, .6, '#b5483a'], [1.4, .34, .5, '#4f8f86'], [.25, .22, .36, '#e7b04a'], [1.0, .26, .4, '#7a6fb0']];
+        boxes.forEach(([bx, bh, bw, c], i) => {
+          const yy = i < 3 ? ct - bh : ct - .42 - bh;
+          const xx = x + bx; if (xx + bw > x + w) return;
+          g.fillStyle = c; g.fillRect(xx, yy, bw, bh);
+          g.fillStyle = '#fbf6ee'; g.fillRect(xx + bw / 2 - .03, yy, .06, bh); g.fillRect(xx, yy + bh / 2 - .03, bw, .06);
+          g.beginPath(); g.moveTo(xx + bw / 2, yy); g.quadraticCurveTo(xx + bw / 2 - .15, yy - .12, xx + bw / 2 - .1, yy); g.moveTo(xx + bw / 2, yy); g.quadraticCurveTo(xx + bw / 2 + .15, yy - .12, xx + bw / 2 + .1, yy); g.strokeStyle = '#fbf6ee'; g.lineWidth = .03; g.stroke();
+        });
+        g.fillStyle = '#6b4a2a'; g.fillRect(x, ct - .42 + .0, w, .04);
+        g.fillStyle = '#6b4a2a'; g.fillRect(x, ct, w, h - (ct - y));
+      },
+      store(g, S, x, y, w, h) {
+        g.fillStyle = '#e8f6f2'; g.fillRect(x, y, w, h);
+        for (let r = 0; r < 3; r++) {
+          const yy = y + .2 + r * (h - .3) / 3;
+          g.fillStyle = '#9aa5a5'; g.fillRect(x, yy + .28, w, .04);
+          for (let i = 0; i < Math.floor(w / .2); i++) {
+            g.fillStyle = pick(['#e0823a', '#4f8f86', '#c62828', '#e7b04a', '#7a6fb0', '#2a8f5f']);
+            g.fillRect(x + .06 + i * .2, yy + .06, .15, .22);
+          }
+        }
+      },
+      shutter(g, S, x, y, w, h) {
+        g.fillStyle = '#6f7a86'; g.fillRect(x, y, w, h);
+        g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = .02;
+        for (let yy = y + .08; yy < y + h; yy += .08) { g.beginPath(); g.moveTo(x, yy); g.lineTo(x + w, yy); g.stroke(); }
+      }
+    };
+
+    function drawFacade(cfg) {
+      const S = 128, W = cfg.w, H = cfg.h, GT = H - GT_H;
+      const c = canvas(W * S, H * S), g = c.getContext('2d');
+      g.scale(S, S);
+      g.fillStyle = cfg.wall; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(0,0,0,.2)'; g.lineWidth = .012;
+      if (cfg.mat === 'wood') {
+        for (let x = .12; x < W; x += .12) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+      } else {
+        let row = 0;
+        for (let y = .12; y < H; y += .12, row++) {
+          g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
+          for (let x = (row % 2) * .14; x < W; x += .28) { g.beginPath(); g.moveTo(x, y - .12); g.lineTo(x, y); g.stroke(); }
+        }
+      }
+      const sh = g.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(0,0,0,.35)'); sh.addColorStop(.35, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.15)');
+      g.fillStyle = sh; g.fillRect(0, 0, W, H);
+      g.fillStyle = cfg.trim; g.fillRect(0, 0, W, .14); g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, .14, W, .04);
+
+      // 二樓窗戶
+      if (cfg.upper) {
+        const n = Math.max(2, Math.floor(W / 1.3));
+        for (let i = 0; i < n; i++) {
+          const ww = .62, wh = .9, x = (W / n) * (i + .5) - ww / 2;
+          winDraw(g, x, .5, ww, wh, pick(['#ffd9a0', '#ffe3b5', '#ffcf8a']), cfg.goods === 'drinks' ? '#e7c9a0' : (i % 2 ? '#b7a0d8' : null));
+        }
+        if (cfg.goods === 'drinks') { rrect(g, W - .85, GT - .55, .55, .3, .03, '#9aa5a5'); g.strokeStyle = '#566'; g.lineWidth = .02; g.beginPath(); g.moveTo(W - .78, GT - .4); g.lineTo(W - .38, GT - .4); g.stroke(); }
+      }
+
+      // 招牌（一般店）
+      if (cfg.name && !cfg.main && !cfg.store) {
+        const sy = GT - .78;
+        rrect(g, .25, sy, W - .5, .5, .06, '#20140c', '#e7b04a', .025);
+        txt(g, S, cfg.name + (cfg.sub ? ' · ' + cfg.sub : ''), W / 2, sy + .26, W > 3.6 ? .3 : .26, '#ffd27a', 900);
+      }
+      if (cfg.store) {
+        g.fillStyle = '#e8f0f2'; g.fillRect(0, GT - .85, W, .6);
+        g.fillStyle = '#2a8f5f'; g.fillRect(0, GT - .3, W, .08);
+        txt(g, S, cfg.name, W / 2, GT - .55, .34, '#1f6f48', 900);
+      }
+      if (cfg.main) {
+        // 招牌後的木牆面板 + 布簾
+        g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(.2, .4, W - .4, 1.0);
+        g.fillStyle = '#1d130c'; g.fillRect(.2, GT - 1.0, W - .4, .06);
+        const n = 9, nw = (W - .5) / n;
+        for (let i = 0; i < n; i++) {
+          g.fillStyle = '#c2662a'; g.fillRect(.25 + i * nw, GT - .94, nw - .05, .8);
+          const sg = g.createLinearGradient(0, GT - .94, 0, GT - .14); sg.addColorStop(0, 'rgba(0,0,0,.3)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+          g.fillStyle = sg; g.fillRect(.25 + i * nw, GT - .94, nw - .05, .8);
+        }
+        txt(g, S, '現煎 · 熱呼呼', W / 2, GT - .55, .34, '#fbf6ee', 900, 'center', 10);
+      }
+
+      // 一樓
+      g.fillStyle = '#150d08'; g.fillRect(0, GT, W, GT_H);
+      g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, H - .3, W, .3);
+      const dw = 1.0, dh = 2.3, dx = cfg.doorX - dw / 2, dy = H - dh;
+      const wx = .3, wy = GT + .4;
+      let ww = dx - wx - .3;
+      let menuX = null;
+      if (cfg.menu) { ww -= 1.0; menuX = wx + ww + .15; }
+      const wh = H - .3 - wy;
+      if (cfg.goods === 'shutter') {
+        GOODS.shutter(g, S, .2, GT + .3, W - .4, H - GT - .6);
+      } else {
+        winDraw(g, wx, wy, ww, wh, '#ffe2b0');
+        g.save(); g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
+        GOODS[cfg.goods](g, S, wx, wy, ww, wh);
+        g.restore();
+        g.strokeStyle = '#120b07'; g.lineWidth = .035;
+        g.beginPath(); g.moveTo(wx + ww / 2, wy); g.lineTo(wx + ww / 2, wy + wh); g.stroke();
+        if (cfg.neon) {
+          rrect(g, wx + ww - .7, wy + .12, .6, .3, .08, '#2b0f1a', '#ff4f81', .03);
+          txt(g, S, cfg.neon, wx + ww - .4, wy + .27, .18, '#ff7aa2', 700);
+        }
+      }
+      if (menuX !== null) {
+        rrect(g, menuX, wy, .85, wh * .9, .04, '#20140c', '#E0823A', .025);
+        txt(g, S, '菜單', menuX + .425, wy + .2, .2, '#ffc977', 900);
+        const items = cfg.main ? [['豬肉', '$95'], ['韭菜', '$95'], ['牛肉', '$110'], ['酸辣湯', '$40']] : [['招牌', '$60'], ['人氣', '$45'], ['限定', '$80']];
+        items.forEach(([n, p], i) => {
+          const yy = wy + .5 + i * .24;
+          txt(g, S, n, menuX + .1, yy, .15, '#fbf6ee', 700, 'left');
+          txt(g, S, p, menuX + .75, yy, .15, '#E0823A', 700, 'right');
+          g.strokeStyle = 'rgba(255,255,255,.2)'; g.lineWidth = .01; g.beginPath(); g.moveTo(menuX + .08, yy + .1); g.lineTo(menuX + .77, yy + .1); g.stroke();
+        });
+      }
+      // 門
+      g.fillStyle = '#0f0805'; g.fillRect(dx - .06, dy - .06, dw + .12, dh + .06);
+      const dg = g.createLinearGradient(0, dy, 0, dy + dh);
+      dg.addColorStop(0, cfg.store ? '#d9f3ee' : '#ffd9a0'); dg.addColorStop(1, cfg.store ? '#a9d4cc' : '#c98d52');
+      g.fillStyle = dg; g.globalAlpha = cfg.goods === 'shutter' ? .25 : .75; g.fillRect(dx, dy, dw, dh); g.globalAlpha = 1;
+      g.strokeStyle = '#0f0805'; g.lineWidth = .04;
+      g.beginPath(); g.moveTo(dx + dw / 2, dy); g.lineTo(dx + dw / 2, dy + dh); g.moveTo(dx, dy + dh * .5); g.lineTo(dx + dw, dy + dh * .5); g.stroke();
+      g.fillStyle = '#e7b04a'; g.fillRect(dx + dw / 2 - .1, dy + dh * .5, .04, .3); g.fillRect(dx + dw / 2 + .06, dy + dh * .5, .04, .3);
+      // 地腳
+      g.fillStyle = cfg.trim; g.fillRect(0, H - .1, W, .1);
+
+      const t = tex(c);
+      return t;
+    }
+
+    /* ---------- 材質 / 建築 ---------- */
+    const facadeMats = [];
+    const lamps = [];
+    function addLamp(x, z) {
+      const grp = new T.Group();
+      const pole = new T.Mesh(new T.CylinderGeometry(.05, .07, 4.4, 8), new T.MeshLambertMaterial({ color: 0x1d130c }));
+      pole.position.y = 2.2; grp.add(pole);
+      const arm = new T.Mesh(new T.BoxGeometry(.5, .05, .05), new T.MeshLambertMaterial({ color: 0x1d130c }));
+      arm.position.set(0, 4.35, 0); grp.add(arm);
+      const bulb = new T.Mesh(new T.SphereGeometry(.2, 12, 12), new T.MeshBasicMaterial({ color: 0xffd9a0 }));
+      bulb.position.set(0, 4.25, 0); grp.add(bulb);
+      const glow = new T.Sprite(new T.SpriteMaterial({ map: glowTex(), color: 0xffcf8a, transparent: true, opacity: .7, depthWrite: false, blending: T.AdditiveBlending }));
+      glow.scale.set(2.8, 2.8, 1); glow.position.set(0, 4.25, 0); grp.add(glow);
+      grp.position.set(x, 0, z);
+      scene.add(grp);
+      return grp;
+    }
+    let _glow;
+    function glowTex() {
+      if (_glow) return _glow;
+      const c = canvas(128, 128), g = c.getContext('2d');
+      const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.3, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+      return (_glow = new T.CanvasTexture(c));
+    }
+    let _soft;
+    function softTex() {
+      if (_soft) return _soft;
+      const c = canvas(64, 64), g = c.getContext('2d');
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      return (_soft = new T.CanvasTexture(c));
+    }
+
+    function awningTex(w, c1, c2, scallop) {
+      const n = Math.max(6, Math.floor(w / .3) & ~1);
+      const cw = n * 32, ch = scallop ? 40 : 64;
+      const c = canvas(cw, ch), g = c.getContext('2d');
+      for (let i = 0; i < n; i++) {
+        g.fillStyle = i % 2 ? c2 : c1;
+        if (!scallop) g.fillRect(i * 32, 0, 32, ch);
+        else {
+          g.fillRect(i * 32, 0, 32, ch - 16);
+          g.beginPath(); g.arc(i * 32 + 16, ch - 16, 16, 0, Math.PI); g.fill();
+        }
+      }
+      return new T.CanvasTexture(c);
+    }
+
+    const shopGroup = new T.Group(); scene.add(shopGroup);
+    const lanterns = [];
+    const steamSpots = [];
+
+    SHOPS.forEach((cfg, idx) => {
+      const faceTex = drawFacade(cfg);
+      cfg._tex = faceTex;
+      const front = new T.MeshLambertMaterial({ map: faceTex, emissive: 0xffffff, emissiveMap: faceTex, emissiveIntensity: .75 });
+      facadeMats.push({ cfg, mat: front });
+      const side = new T.MeshLambertMaterial({ color: new T.Color(cfg.wall).multiplyScalar(.7) });
+      const roofM = new T.MeshLambertMaterial({ color: new T.Color(cfg.trim).multiplyScalar(.6) });
+      const b = new T.Mesh(new T.BoxGeometry(cfg.w, cfg.h, DEPTH), [side, side, roofM, roofM, front, side]);
+      b.position.set(cfg.cx, cfg.h / 2, -DEPTH / 2);
+      shopGroup.add(b);
+
+      // 屋簷
+      if (!cfg.main) {
+        const cor = new T.Mesh(new T.BoxGeometry(cfg.w + .2, .16, .5), new T.MeshLambertMaterial({ color: new T.Color(cfg.trim).multiplyScalar(.9) }));
+        cor.position.set(cfg.cx, cfg.h + .02, .1); shopGroup.add(cor);
+      }
+
+      // 遮陽棚
+      if (cfg.awn) {
+        const aw = cfg.w - .1, L = Math.hypot(.5, .85);
+        const am = new T.Mesh(new T.PlaneGeometry(aw, L), new T.MeshLambertMaterial({ map: awningTex(aw, cfg.awn[0], cfg.awn[1], false), side: T.DoubleSide, emissive: 0x222222 }));
+        am.rotation.x = -Math.atan2(.85, .5);
+        am.position.set(cfg.cx, 2.65, .425);
+        shopGroup.add(am);
+        const vt = awningTex(aw, cfg.awn[0], cfg.awn[1], true);
+        const vm = new T.Mesh(new T.PlaneGeometry(aw, .25), new T.MeshLambertMaterial({ map: vt, transparent: true, alphaTest: .5, side: T.DoubleSide, emissive: 0x222222 }));
+        vm.position.set(cfg.cx, 2.28, .86);
+        shopGroup.add(vm);
+      }
+
+      // 盆栽
+      if (idx === 1 || idx === 4) {
+        const pot = new T.Mesh(new T.CylinderGeometry(.2, .15, .35, 10), new T.MeshLambertMaterial({ color: 0x8a4b22 }));
+        pot.position.set(cfg.x0 + cfg.w - .3, .17, .6); shopGroup.add(pot);
+        const leaf = new T.Mesh(new T.SphereGeometry(.3, 10, 8), new T.MeshLambertMaterial({ color: 0x3f9a58 }));
+        leaf.position.set(cfg.x0 + cfg.w - .3, .6, .6); leaf.scale.set(1, 1.1, 1); shopGroup.add(leaf);
+      }
+
+      // 蒸氣位置
+      if (cfg.goods === 'pan' || cfg.goods === 'steam' || cfg.goods === 'steam2') {
+        const wx = cfg.x0 + .3, ww = cfg.doorX - .5 - .3 - .3 - (cfg.menu ? 1.0 : 0);
+        for (let i = 0; i < 5; i++) steamSpots.push({ x: wx + ww * (i + .5) / 5, y: 1.5, z: .25, t: Math.random() * 3, big: cfg.main });
+      }
+      // 地面光暈（店內暖光灑在人行道）
+      const spill = new T.Mesh(new T.PlaneGeometry(cfg.w * .9, 2.0), new T.MeshBasicMaterial({ map: softTex(), color: 0xffb35a, transparent: true, opacity: cfg.goods === 'shutter' ? .1 : .45, depthWrite: false, blending: T.AdditiveBlending }));
+      spill.rotation.x = -Math.PI / 2; spill.position.set(cfg.cx, .02, 1.0); scene.add(spill);
+    });
+
+    // 主角：立體招牌 + 瓦屋頂 + 燈籠
+    {
+      const m = MAIN, sw = m.w - .6, sh = .95;
+      const sc = canvas(sw * 160, sh * 160), g = sc.getContext('2d');
+      rrect(g, 4, 4, sc.width - 8, sc.height - 8, 14, '#20140c', '#E0823A', 6);
+      g.strokeStyle = '#ffc977'; g.lineWidth = 2; g.setLineDash([8, 5]); g.strokeRect(14, 14, sc.width - 28, sc.height - 28); g.setLineDash([]);
+      g.fillStyle = '#ffc977'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = `900 ${sc.height * .5}px ${SERIF}`; g.fillText('金脆鍋貼', sc.width / 2, sc.height * .44);
+      g.font = `700 ${sc.height * .11}px ${SERIF}`; g.fillStyle = '#E0823A';
+      if ('letterSpacing' in g) g.letterSpacing = '4px';
+      g.fillText('GOLDEN CRISP GYOZA · SINCE 1994', sc.width / 2, sc.height * .82);
+      m._signCanvas = sc;
+      const st = new T.CanvasTexture(sc);
+      m._signTex = st;
+      const sm = new T.MeshLambertMaterial({ map: st, emissive: 0xffffff, emissiveMap: st, emissiveIntensity: .9 });
+      const sign = new T.Mesh(new T.BoxGeometry(sw, sh, .14), [new T.MeshLambertMaterial({ color: 0x20140c }), new T.MeshLambertMaterial({ color: 0x20140c }), new T.MeshLambertMaterial({ color: 0x20140c }), new T.MeshLambertMaterial({ color: 0x20140c }), sm, new T.MeshLambertMaterial({ color: 0x20140c })]);
+      sign.position.set(m.cx, m.h - .95, .1); shopGroup.add(sign);
+      // 招牌支架
+      [-1, 1].forEach(s => {
+        const br = new T.Mesh(new T.BoxGeometry(.08, .08, .4), new T.MeshLambertMaterial({ color: 0x20140c }));
+        br.position.set(m.cx + s * (sw / 2 - .3), m.h - .5, .0); shopGroup.add(br);
+      });
+      // 瓦屋頂
+      const tc = canvas(256, 128), tg = tc.getContext('2d');
+      tg.fillStyle = '#6b3a22'; tg.fillRect(0, 0, 256, 128);
+      for (let r = 0; r < 8; r++) for (let i = 0; i < 16; i++) {
+        tg.fillStyle = (i + r) % 2 ? '#7a4529' : '#5d3019';
+        tg.beginPath(); tg.arc(i * 16 + (r % 2) * 8, r * 16, 10, 0, Math.PI); tg.fill();
+      }
+      const tt = new T.CanvasTexture(tc); tt.wrapS = tt.wrapT = T.RepeatWrapping; tt.repeat.set(m.w / 1.2, 1);
+      const roof = new T.Mesh(new T.BoxGeometry(m.w + .6, .16, 1.9), new T.MeshLambertMaterial({ map: tt }));
+      roof.position.set(m.cx, m.h + .35, .15); roof.rotation.x = .5; shopGroup.add(roof);
+      const ridge = new T.Mesh(new T.BoxGeometry(m.w + .7, .2, .35), new T.MeshLambertMaterial({ color: 0x3a1f10 }));
+      ridge.position.set(m.cx, m.h + .95, -.7); shopGroup.add(ridge);
+      const roofBack = new T.Mesh(new T.BoxGeometry(m.w + .6, .16, 1.9), new T.MeshLambertMaterial({ map: tt }));
+      roofBack.position.set(m.cx, m.h + .65, -1.1); roofBack.rotation.x = -.35; shopGroup.add(roofBack);
+      // 燈籠
+      [[-m.w / 2 - .2, 4.7], [m.w / 2 + .2, 4.7], [-m.w / 2 + .55, 4.4], [m.w / 2 - .55, 4.4]].forEach(([dx, y], i) => addLantern(m.cx + dx, y, .65, i > 1 ? .75 : 1));
+      // A 字菜單牌
+      const ab = canvas(128, 160), ag = ab.getContext('2d');
+      ag.fillStyle = '#20140c'; ag.fillRect(0, 0, 128, 160); ag.strokeStyle = '#E0823A'; ag.lineWidth = 6; ag.strokeRect(5, 5, 118, 150);
+      ag.fillStyle = '#ffc977'; ag.textAlign = 'center'; ag.font = `900 26px ${SERIF}`; ag.fillText('今日推薦', 64, 38);
+      ag.font = `700 22px ${SERIF}`; ag.fillStyle = '#fbf6ee'; ag.fillText('招牌鍋貼', 64, 80); ag.fillText('十顆 $95', 64, 112); ag.fillStyle = '#E0823A'; ag.fillText('現煎熱售', 64, 142);
+      const abt = new T.CanvasTexture(ab);
+      const am = new T.MeshLambertMaterial({ map: abt, emissive: 0xffffff, emissiveMap: abt, emissiveIntensity: .5, side: T.DoubleSide });
+      [-1, 1].forEach(s => {
+        const p = new T.Mesh(new T.PlaneGeometry(.55, .75), am);
+        p.position.set(m.x0 + 1.0 + s * .001, .4, 1.15 + s * .17); p.rotation.x = -s * .22; shopGroup.add(p);
+      });
+    }
+    function addLantern(x, y, z, s) {
+      const g = new T.Group();
+      const cord = new T.Mesh(new T.CylinderGeometry(.01, .01, .5, 4), new T.MeshBasicMaterial({ color: 0x1d130c }));
+      cord.position.y = .25; g.add(cord);
+      const body = new T.Mesh(new T.SphereGeometry(.24, 14, 12), new T.MeshBasicMaterial({ color: 0xd12f24 }));
+      body.scale.set(1, 1.1, 1); body.position.y = -.1; g.add(body);
+      const cap = new T.MeshBasicMaterial({ color: 0x7a1a12 });
+      const c1 = new T.Mesh(new T.CylinderGeometry(.1, .1, .05, 8), cap); c1.position.y = .13; g.add(c1);
+      const c2 = c1.clone(); c2.position.y = -.33; g.add(c2);
+      const tas = new T.Mesh(new T.CylinderGeometry(.015, .03, .2, 6), new T.MeshBasicMaterial({ color: 0xe7b04a })); tas.position.y = -.46; g.add(tas);
+      const gl = new T.Sprite(new T.SpriteMaterial({ map: glowTex(), color: 0xff4a30, transparent: true, opacity: .55, depthWrite: false, blending: T.AdditiveBlending }));
+      gl.scale.set(1.2, 1.2, 1); gl.position.y = -.1; g.add(gl);
+      g.scale.setScalar(s);
+      g.position.set(x, y, z);
+      scene.add(g); lanterns.push({ g, ph: Math.random() * 6 });
+    }
+    // 其他店面的燈籠
+    SHOPS.forEach((c, i) => { if (i === 2) { addLantern(c.x0 + .35, 3.55, .35, .6); addLantern(c.x0 + c.w - .35, 3.55, .35, .6); } });
+
+    /* ---------- 地面、背景 ---------- */
+    {
+      // 人行道
+      const sc = canvas(256, 256), g = sc.getContext('2d');
+      g.fillStyle = '#6b5645'; g.fillRect(0, 0, 256, 256);
+      g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 3;
+      for (let i = 0; i <= 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); }
+      for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .08})`; g.fillRect(Math.random() * 256, Math.random() * 256, 6, 6); }
+      const st = new T.CanvasTexture(sc); st.wrapS = st.wrapT = T.RepeatWrapping; st.repeat.set(TOTAL / 1.6, 2.6 / 1.6);
+      const walk = new T.Mesh(new T.BoxGeometry(TOTAL + 40, .2, 2.7), new T.MeshLambertMaterial({ map: st }));
+      walk.position.set(0, -.1, 1.35); scene.add(walk);
+      const curb = new T.Mesh(new T.BoxGeometry(TOTAL + 40, .22, .15), new T.MeshLambertMaterial({ color: 0x9a8a7a }));
+      curb.position.set(0, -.09, 2.77); scene.add(curb);
+      // 馬路
+      const rc = canvas(512, 128), rg = rc.getContext('2d');
+      rg.fillStyle = '#2a2430'; rg.fillRect(0, 0, 512, 128);
+      for (let i = 0; i < 400; i++) { rg.fillStyle = `rgba(255,255,255,${Math.random() * .04})`; rg.fillRect(Math.random() * 512, Math.random() * 128, 3, 2); }
+      rg.fillStyle = '#e8d9a0'; for (let i = 0; i < 8; i++) rg.fillRect(i * 64 + 8, 60, 36, 6);
+      const rt = new T.CanvasTexture(rc); rt.wrapS = rt.wrapT = T.RepeatWrapping; rt.repeat.set(5, 1);
+      const road = new T.Mesh(new T.PlaneGeometry(TOTAL + 40, 8), new T.MeshLambertMaterial({ map: rt }));
+      road.rotation.x = -Math.PI / 2; road.position.set(0, -.19, 6.85); scene.add(road);
+      // 遠景
+      const bc = canvas(2048, 640), b = bc.getContext('2d');
+      const sky = b.createLinearGradient(0, 0, 0, 640);
+      sky.addColorStop(0, '#0e0a1c'); sky.addColorStop(.55, '#3a2145'); sky.addColorStop(.85, '#a8502e'); sky.addColorStop(1, '#e0823a');
+      b.fillStyle = sky; b.fillRect(0, 0, 2048, 640);
+      for (let i = 0; i < 160; i++) { b.fillStyle = `rgba(255,255,255,${.2 + Math.random() * .6})`; b.fillRect(Math.random() * 2048, Math.random() * 300, 2, 2); }
+      const mg = b.createRadialGradient(1500, 120, 0, 1500, 120, 120); mg.addColorStop(0, 'rgba(255,240,200,.9)'); mg.addColorStop(.25, 'rgba(255,240,200,.35)'); mg.addColorStop(1, 'rgba(255,240,200,0)');
+      b.fillStyle = mg; b.fillRect(1380, 0, 240, 260);
+      b.fillStyle = '#fff4d0'; b.beginPath(); b.arc(1500, 120, 26, 0, 7); b.fill();
+      [['#2a1d33', 360, 140], ['#1b1324', 440, 90]].forEach(([col, base, amp], layer) => {
+        let x = 0; b.fillStyle = col;
+        while (x < 2048) {
+          const w = 60 + Math.random() * 110, h = amp + Math.random() * amp * 1.4;
+          b.fillRect(x, 640 - h - (layer ? 0 : 20), w, h + 40);
+          for (let wy = 640 - h - 10; wy < 620; wy += 22) for (let wx = x + 10; wx < x + w - 10; wx += 20) if (Math.random() < .28) { b.fillStyle = `rgba(255,${190 + Math.random() * 40 | 0},120,${.5 + Math.random() * .4})`; b.fillRect(wx, wy, 7, 10); }
+          b.fillStyle = col; x += w + 6;
+        }
+      });
+      const bt = new T.CanvasTexture(bc);
+      const back = new T.Mesh(new T.PlaneGeometry(110, 34), new T.MeshBasicMaterial({ map: bt, fog: false }));
+      back.position.set(0, 12.5, -16); scene.add(back);
+    }
+
+    /* ---------- 燈光 ---------- */
+    scene.add(new T.AmbientLight(0x8a6f9a, .75));
+    scene.add(new T.HemisphereLight(0xffd7b0, 0x2a1d33, .45));
+    const dir = new T.DirectionalLight(0xffc890, .55); dir.position.set(-6, 9, 10); scene.add(dir);
+    [-HALF * .62, HALF * .62].forEach(x => {
+      addLamp(x, 2.55);
+      const pl = new T.PointLight(0xffc27a, .9, 9, 2); pl.position.set(x, 4.2, 2.2); scene.add(pl);
+    });
+
+    // 彩燈串
+    const bulbs = [];
+    {
+      const x1 = -HALF * .62, x2 = HALF * .62, n = 42;
+      const cols = [0xffd27a, 0xff8a65, 0xfff3c4, 0x9be7c8];
+      const geo = new T.SphereGeometry(.06, 6, 6);
+      for (let i = 0; i <= n; i++) {
+        const t = i / n, x = x1 + (x2 - x1) * t, y = 4.4 - Math.sin(t * Math.PI) * .9;
+        const m = new T.Mesh(geo, new T.MeshBasicMaterial({ color: cols[i % 4] }));
+        m.position.set(x, y, 2.5); scene.add(m); bulbs.push({ m, ph: Math.random() * 6 });
+      }
+      const wire = new T.Line(new T.BufferGeometry().setFromPoints(Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return new T.Vector3(x1 + (x2 - x1) * t, 4.4 - Math.sin(t * Math.PI) * .9, 2.5); })), new T.LineBasicMaterial({ color: 0x1d130c }));
+      scene.add(wire);
+    }
+
+    /* ---------- 蒸氣 ---------- */
+    const steams = steamSpots.map(s => {
+      const sp = new T.Sprite(new T.SpriteMaterial({ map: softTex(), color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+      scene.add(sp); return Object.assign(s, { sp });
+    });
+
+    /* ---------- 路人 ---------- */
+    const SHIRTS = ['#E0823A', '#F3EADB', '#C2662A', '#4f8f86', '#b5483a', '#7a6fb0', '#e7b04a', '#3d6fb0', '#d9a066', '#6bb08a'];
+    const PANTS = ['#2a2430', '#3b3a50', '#4a3a2a', '#1f2a36', '#5a4a3a'];
+    const SKINS = ['#f1c9a5', '#e0a97d', '#c68863', '#a86f4c'];
+    const HAIR = ['#1b1210', '#2d1d14', '#3a2a1a', '#5a4a3a', '#8a8a8a'];
+    const geo = {
+      leg: new T.BoxGeometry(.17, .82, .2),
+      shoe: new T.BoxGeometry(.19, .09, .3),
+      torso: new T.CylinderGeometry(.21, .24, .72, 10),
+      arm: new T.CylinderGeometry(.065, .06, .66, 8),
+      head: new T.SphereGeometry(.17, 14, 12),
+      hair: new T.SphereGeometry(.185, 14, 10, 0, Math.PI * 2, 0, Math.PI * .56),
+      bag: new T.BoxGeometry(.2, .26, .12),
+      shadow: new T.CircleGeometry(.34, 14)
+    };
+    const shadowMat = new T.MeshBasicMaterial({ map: softTex(), color: 0x000000, transparent: true, opacity: .55, depthWrite: false });
+
+    function makePerson() {
+      const shirt = new T.MeshLambertMaterial({ color: pick(SHIRTS), transparent: true });
+      const pant = new T.MeshLambertMaterial({ color: pick(PANTS), transparent: true });
+      const skin = new T.MeshLambertMaterial({ color: pick(SKINS), transparent: true });
+      const hairM = new T.MeshLambertMaterial({ color: pick(HAIR), transparent: true });
+      const shoeM = new T.MeshLambertMaterial({ color: 0x1d130c, transparent: true });
+      const mats = [shirt, pant, skin, hairM, shoeM];
+
+      const root = new T.Group();
+      const body = new T.Group(); root.add(body);
+
+      const mkLeg = x => {
+        const pv = new T.Group(); pv.position.set(x, .86, 0);
+        const l = new T.Mesh(geo.leg, pant); l.position.y = -.41; pv.add(l);
+        const s = new T.Mesh(geo.shoe, shoeM); s.position.set(0, -.82, .05); pv.add(s);
+        body.add(pv); return pv;
+      };
+      const legL = mkLeg(-.11), legR = mkLeg(.11);
+      const torso = new T.Mesh(geo.torso, shirt); torso.position.y = 1.22; torso.scale.set(1, 1, .72); body.add(torso);
+      const mkArm = x => {
+        const pv = new T.Group(); pv.position.set(x, 1.5, 0);
+        const a = new T.Mesh(geo.arm, shirt); a.position.y = -.3; pv.add(a);
+        const h = new T.Mesh(new T.SphereGeometry(.07, 8, 6), skin); h.position.y = -.65; pv.add(h);
+        body.add(pv); return pv;
+      };
+      const armL = mkArm(-.3), armR = mkArm(.3);
+      const head = new T.Mesh(geo.head, skin); head.position.y = 1.75; body.add(head);
+      const hair = new T.Mesh(geo.hair, hairM); hair.position.set(0, 1.77, -.015); hair.rotation.x = -.15; body.add(hair);
+      if (Math.random() < .4) {
+        const bag = new T.Mesh(geo.bag, new T.MeshLambertMaterial({ color: pick(['#c9a36b', '#b5483a', '#4f8f86', '#fbf6ee']), transparent: true })); bag.position.set(0, -.78, .02); armR.add(bag);
+        mats.push(bag.material);
+      }
+      const shadow = new T.Mesh(geo.shadow, shadowMat); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .015; shadow.scale.set(1.2, 1.2, 1);
+      scene.add(shadow);
+
+      const sc = rnd(.86, 1.02); root.scale.setScalar(sc);
+      scene.add(root);
+      return { root, body, legL, legR, armL, armR, mats, shadow, sc };
+    }
+
+    const people = [];
+    const LANES = [0.95, 1.35, 1.75, 2.15];
+    function spawn(p, anywhere) {
+      p.dir = Math.random() < .5 ? 1 : -1;
+      p.laneZ = pick(LANES) + rnd(-.1, .1);
+      p.speed = rnd(.75, 1.4);
+      p.x = anywhere ? rnd(-HALF - 1, HALF + 1) : (p.dir > 0 ? -HALF - 2.5 : HALF + 2.5);
+      p.z = p.laneZ;
+      p.state = 'walk'; p.skip = null; p.opacity = 1; p.rot = p.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+      p.visible = true;
+    }
+    for (let i = 0; i < 20; i++) {
+      const p = Object.assign(makePerson(), { phase: Math.random() * 6 });
+      spawn(p, true);
+      if (i % 6 === 0) { // 一開始就有人在店裡
+        const d = SHOPS.filter(s => s.enter > 0)[i % 5];
+        p.state = 'inside'; p.door = d; p.timer = rnd(1, 5); p.visible = false;
+      }
+      people.push(p);
+    }
+    const ENTERABLE = SHOPS.filter(s => s.enter > 0);
+
+    function setOpacity(p, o) {
+      p.opacity = o;
+      for (let i = 0; i < p.mats.length; i++) p.mats[i].opacity = o;
+    }
+    function approachAngle(cur, target, k) {
+      let d = target - cur;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      return cur + d * k;
+    }
+
+    function stepPerson(p, dt) {
+      let vx = 0, vz = 0, moving = true;
+      if (p.state === 'walk') {
+        vx = p.dir * p.speed;
+        vz = (p.laneZ - p.z) * 1.2;
+        const nx = p.x + vx * dt;
+        if (p.skip && Math.abs(nx - p.skip.doorWX) > .7) p.skip = null;
+        for (let i = 0; i < ENTERABLE.length; i++) {
+          const d = ENTERABLE[i];
+          if (d !== p.skip && (p.x - d.doorWX) * (nx - d.doorWX) <= 0 && Math.random() < d.enter) {
+            p.state = 'toDoor'; p.door = d; break;
+          }
+        }
+        p.x = nx; p.z += vz * dt;
+        if (p.x > HALF + 3 || p.x < -HALF - 3) spawn(p, false);
+      } else if (p.state === 'toDoor') {
+        const tx = p.door.doorWX, tz = .3;
+        const dx = tx - p.x, dz = tz - p.z, dist = Math.hypot(dx, dz);
+        const step = p.speed * dt;
+        vx = dx / (dist || 1) * p.speed; vz = dz / (dist || 1) * p.speed;
+        if (dist <= step) {
+          p.x = tx; p.z = tz; p.state = 'inside'; p.timer = rnd(2.5, 7); p.visible = false; moving = false;
+        } else { p.x += dx / dist * step; p.z += dz / dist * step; }
+        setOpacity(p, clamp01((p.z - .3) / .55));
+      } else if (p.state === 'inside') {
+        p.timer -= dt; moving = false;
+        if (p.timer <= 0) {
+          const d = Math.random() < .75 ? p.door : pick(ENTERABLE);
+          p.door = d; p.x = d.doorWX; p.z = .3; p.dir = Math.random() < .5 ? 1 : -1;
+          p.laneZ = pick(LANES) + rnd(-.1, .1); p.skip = d; p.visible = true; p.state = 'out'; setOpacity(p, 0);
+          p.rot = 0;
+        }
+      } else if (p.state === 'out') {
+        const sp = p.speed * .9;
+        vx = p.dir * sp * .35; vz = sp;
+        p.x += vx * dt; p.z += vz * dt;
+        setOpacity(p, clamp01((p.z - .3) / .55));
+        if (p.z >= p.laneZ) { p.state = 'walk'; setOpacity(p, 1); }
+      }
+
+      p.root.visible = p.visible; p.shadow.visible = p.visible;
+      if (!p.visible) return;
+      if (moving && (vx || vz)) p.rot = approachAngle(p.rot, Math.atan2(vx, vz), Math.min(1, dt * 6));
+      p.root.position.set(p.x, 0, p.z);
+      p.root.rotation.y = p.rot;
+      p.shadow.position.set(p.x, .015, p.z);
+
+      if (moving) p.phase += p.speed * dt * 5.2;
+      const s = Math.sin(p.phase), amp = moving ? .72 : 0;
+      p.legL.rotation.x = s * amp; p.legR.rotation.x = -s * amp;
+      p.armL.rotation.x = -s * amp * .8; p.armR.rotation.x = s * amp * .8;
+      p.body.position.y = Math.abs(Math.cos(p.phase)) * .035 * (moving ? 1 : 0);
+    }
+
+    /* ---------- 尺寸 / 鏡頭 ---------- */
+    let aspect = 2.5, baseDist = 18, parX = 0, parTX = 0, parY = 0, parTY = 0;
+    function resize() {
+      const w = host.clientWidth || 800, h = host.clientHeight || 340;
+      renderer.setSize(w, h, false);
+      aspect = w / h; camera.aspect = aspect;
+      const targetW = Math.min(TOTAL - 2, Math.max(11, aspect * 8.8));
+      const fovH = 2 * Math.atan(Math.tan(T.MathUtils.degToRad(camera.fov / 2)) * aspect);
+      baseDist = (targetW / 2) / Math.tan(fovH / 2);
+      camera.updateProjectionMatrix();
+      if (!running) draw(0);
+    }
+    host.addEventListener('pointermove', e => {
+      const r = host.getBoundingClientRect();
+      parTX = ((e.clientX - r.left) / r.width - .5) * 2;
+      parTY = ((e.clientY - r.top) / r.height - .5) * 2;
+    });
+    host.addEventListener('pointerleave', () => { parTX = 0; parTY = 0; });
+
+    let time = 0;
+    function draw(dt) {
+      time += dt;
+      parX += (parTX - parX) * Math.min(1, dt * 3 || 1); parY += (parTY - parY) * Math.min(1, dt * 3 || 1);
+      const sway = reduceMotion ? 0 : Math.sin(time * .12) * 1.6;
+      camera.position.set(sway + parX * 1.4, 3.1 - parY * .25, baseDist);
+      camera.lookAt(sway * .6 + parX * .6, 2.8, 0);
+      for (const l of lanterns) l.g.rotation.z = Math.sin(time * 1.6 + l.ph) * .08;
+      for (const b of bulbs) b.m.scale.setScalar(.75 + .35 * Math.sin(time * 2.4 + b.ph));
+      for (const s of steams) {
+        const k = ((time * .45 + s.t) % 1);
+        const sc = (s.big ? .45 : .32) + k * .6;
+        s.sp.position.set(s.x + Math.sin(k * 6 + s.t) * .05, s.y + k * 1.0, s.z);
+        s.sp.scale.set(sc, sc, 1);
+        s.sp.material.opacity = Math.sin(k * Math.PI) * .5;
+      }
+      renderer.render(scene, camera);
+    }
+
+    /* ---------- 主迴圈 ---------- */
+    let running = false, visible = true, last = 0, raf = 0;
+    function frame(now) {
+      raf = 0;
+      if (!running) return;
+      const dt = Math.min(.05, (now - last) / 1000 || 0); last = now;
+      for (let i = 0; i < people.length; i++) stepPerson(people[i], dt);
+      draw(dt);
+      raf = requestAnimationFrame(frame);
+    }
+    function start() { if (running || reduceMotion) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+    function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+    function update() { (visible && !document.hidden) ? start() : stop(); }
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(es => { visible = es[0].isIntersecting; update(); }, { threshold: 0 }).observe(host);
+    }
+    document.addEventListener('visibilitychange', update);
+    if ('ResizeObserver' in window) new ResizeObserver(resize).observe(host); else window.addEventListener('resize', resize);
+
+    // 靜態（減少動態）：先讓人群走一會再定格
+    if (reduceMotion) for (let i = 0; i < 300; i++) people.forEach(p => stepPerson(p, .05));
+    resize();
+    draw(0);
+    update();
+
+    // 字型載入完成後重畫店面文字
+    if (document.fonts && document.fonts.load) {
+      Promise.all([document.fonts.load(`900 40px ${SERIF}`), document.fonts.load(`700 40px ${SERIF}`)]).then(() => {
+        SHOPS.forEach((cfg, i) => {
+          const nt = drawFacade(cfg);
+          facadeMats[i].mat.map = nt; facadeMats[i].mat.emissiveMap = nt; facadeMats[i].mat.needsUpdate = true;
+        });
+        // 重畫主招牌
+        const m = MAIN, sc = m._signCanvas, g = sc.getContext('2d');
+        g.clearRect(0, 0, sc.width, sc.height);
+        rrect(g, 4, 4, sc.width - 8, sc.height - 8, 14, '#20140c', '#E0823A', 6);
+        g.strokeStyle = '#ffc977'; g.lineWidth = 2; g.setLineDash([8, 5]); g.strokeRect(14, 14, sc.width - 28, sc.height - 28); g.setLineDash([]);
+        g.fillStyle = '#ffc977'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = `900 ${sc.height * .5}px ${SERIF}`; g.fillText('金脆鍋貼', sc.width / 2, sc.height * .44);
+        g.font = `700 ${sc.height * .11}px ${SERIF}`; g.fillStyle = '#E0823A';
+        if ('letterSpacing' in g) g.letterSpacing = '4px';
+        g.fillText('GOLDEN CRISP GYOZA · SINCE 1994', sc.width / 2, sc.height * .82);
+        m._signTex.needsUpdate = true;
+        if (!running) draw(0);
+      }).catch(() => { });
+    }
+  }
+
+  if (document.readyState === 'complete') boot(); else window.addEventListener('load', boot);
+})();
 </script>
 </body>
 </html>
