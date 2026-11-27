@@ -110,7 +110,8 @@
          class="absolute inset-0 w-full h-full object-cover" @error="$el.remove()">
     <div class="absolute inset-0 bg-gradient-to-r from-wood/90 via-wood/60 to-wood/20"></div>
 
-    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 w-full">
+    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 w-full grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <div>
       <p class="uppercase tracking-[0.3em] text-ember-dark text-xs sm:text-sm font-semibold mb-4 text-amber-300">Handmade · Pan-Fried · Since 1994</p>
       <h1 class="font-serif font-black text-4xl sm:text-6xl leading-tight max-w-2xl">金黃酥脆，<br>傳承手藝的極致美味</h1>
       <p class="mt-5 max-w-xl text-cream/85 text-base sm:text-lg leading-relaxed">
@@ -119,6 +120,15 @@
       <div class="mt-8 flex flex-wrap gap-4">
         <a href="#order" class="rounded-full bg-ember px-7 py-3 font-semibold text-cream shadow-lg shadow-black/20 hover:bg-ember-dark transition">線上點餐</a>
         <a href="#locations" class="rounded-full border border-cream/70 px-7 py-3 font-semibold hover:bg-cream hover:text-wood transition">探索門市</a>
+      </div>
+      </div>
+
+      <!-- 海報（桌機位於右側） -->
+      <div class="hidden lg:flex justify-end">
+        <div class="w-full max-w-md rounded-[2rem] bg-white/10 p-3 ring-1 ring-white/20 shadow-2xl backdrop-blur-sm">
+          <img src="https://i.postimg.cc/j2YmMLV1/Chat-GPT-Image-2026nian8yue9ri-xia-wu06-20-57.png" alt="金脆鍋貼海報"
+               class="w-full max-h-[62vh] rounded-3xl object-contain" @error="$el.closest('.hidden').remove()">
+        </div>
       </div>
     </div>
   </section>
@@ -559,24 +569,6 @@
       <span x-text="t.msg"></span>
     </div>
   </template>
-</div>
-
-<!-- ============================================================
-     海報彈出層（進入首頁時蓋在主頁上方，可關閉）
-     ============================================================ -->
-<div x-data="{ open: true }" x-show="open" x-cloak
-     x-init="document.addEventListener('keydown', e => { if (e.key === 'Escape') open = false })"
-     x-effect="document.body.style.overflow = open ? 'hidden' : ''"
-     x-transition.opacity
-     class="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4"
-     role="dialog" aria-modal="true" aria-label="活動海報"
-     @click.self="open = false">
-  <div class="relative max-h-full">
-    <button type="button" @click="open = false" aria-label="關閉海報"
-            class="absolute -top-3 -right-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white text-xl font-bold text-wood shadow-lg hover:bg-cream focus:outline-none focus-visible:ring-4 focus-visible:ring-ember/50">&times;</button>
-    <img src="https://i.postimg.cc/j2YmMLV1/Chat-GPT-Image-2026nian8yue9ri-xia-wu06-20-57.png" alt="金脆鍋貼海報"
-         class="max-h-[88vh] max-w-full rounded-2xl object-contain shadow-2xl">
-  </div>
 </div>
 
 <!-- ============================================================
