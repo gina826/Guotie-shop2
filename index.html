@@ -504,7 +504,7 @@
 </div>
 
 <!-- ============================================================
-     CHECKOUT MODAL（模擬結帳）
+     CHECKOUT MODAL（結帳 → Google 試算表）
      ============================================================ -->
 <div x-show="checkoutOpen" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4" x-transition.opacity>
   <div class="absolute inset-0 bg-black/50" @click="closeCheckout()"></div>
@@ -567,7 +567,7 @@
 
       <p x-show="formError" x-cloak class="text-sm text-red-600" x-text="formError"></p>
 
-      <button type="submit" class="w-full rounded-full bg-ember py-3 font-semibold text-cream hover:bg-ember-dark transition">送出訂單</button>
+      <button type="submit" :disabled="submitting" class="w-full rounded-full bg-ember py-3 font-semibold text-cream hover:bg-ember-dark transition disabled:opacity-60 disabled:cursor-wait" x-text="submitting ? '送出中…' : '送出訂單'">送出訂單</button>
     </form>
 
     <!-- 成功畫面 -->
@@ -623,6 +623,18 @@
     gift:    'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?w=800&q=80'
   };
 
+  /* ============================================================
+     訂單串接：Google Apps Script 網頁應用程式網址
+     部署 gas/Code.gs 後，把「部署 → 網頁應用程式」的網址貼在下方。
+     留空＝示範模式（只在本機產生訂單編號，不會寫入試算表）。
+     ============================================================ */
+  const ORDER_API = '';
+
+  function newRequestId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
   function shop() {
     return {
       /* ---------- UI state ---------- */
@@ -632,6 +644,8 @@
       orderDone: false,
       orderNo: '',
       formError: '',
+      submitting: false,
+      requestId: '',
       toasts: [],
       nextToastId: 1,
       openFaq: 0,
@@ -773,6 +787,7 @@
         this.drawerOpen = false;
         this.orderDone = false;
         this.formError = '';
+        this.requestId = newRequestId(); // 同一次結帳重送時共用，伺服器端據此避免重複下單
         this.checkoutOpen = true;
         this.refreshIcons();
       },
@@ -787,7 +802,8 @@
         this.refreshIcons();
       },
 
-      submitOrder() {
+      async submitOrder() {
+        if (this.submitting) return;
         this.formError = '';
         if (!this.form.name.trim()) {
           this.formError = '請填寫姓名。';
@@ -801,9 +817,56 @@
           this.formError = '宅配需填寫外送地址。';
           return;
         }
-        // 模擬送出：產生訂單編號並清空購物車
-        this.orderNo = 'GC' + Date.now().toString().slice(-6);
+
+        // 示範模式：尚未設定訂單 API，只在本機產生編號
+        if (!ORDER_API) {
+          this.finishOrder('GC' + Date.now().toString().slice(-6));
+          return;
+        }
+
+        const payload = {
+          requestId: this.requestId,
+          type: this.form.type,
+          name: this.form.name.trim(),
+          phone: this.form.phone.trim(),
+          address: this.form.type === 'delivery' ? this.form.address.trim() : '',
+          time: this.form.time,
+          note: this.form.note.trim(),
+          items: this.cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+          total: this.subtotal,
+          source: window.matchMedia && matchMedia('(display-mode: standalone)').matches ? 'pwa' : 'web',
+          website: '' // 機器人陷阱欄位，請勿填寫
+        };
+
+        this.submitting = true;
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 25000);
+        try {
+          // 用 text/plain 可避免瀏覽器的 CORS 預檢（Apps Script 不支援 OPTIONS）
+          const res = await fetch(ORDER_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+            signal: ctrl.signal
+          });
+          const r = await res.json();
+          if (r && r.ok) {
+            this.finishOrder(r.orderNo);
+          } else {
+            this.formError = (r && r.message) || '訂單送出失敗，請稍後再試。';
+          }
+        } catch (err) {
+          this.formError = '網路連線異常，訂單尚未確認送出。請檢查網路後再按一次「送出訂單」（不會重複下單），或來電訂購。';
+        } finally {
+          clearTimeout(timer);
+          this.submitting = false;
+        }
+      },
+
+      finishOrder(orderNo) {
+        this.orderNo = orderNo;
         this.cart = [];
+        this.requestId = '';
         this.orderDone = true;
         this.refreshIcons();
       },
