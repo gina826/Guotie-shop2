@@ -267,8 +267,8 @@ function appendRows_(sheet, rows) {
 /* ================= 通知信 ================= */
 function notifyShop_(settings, r) {
   if (String(settings.NOTIFY_ENABLED).toUpperCase() === 'FALSE') return;
-  const to = String(settings.NOTIFY_EMAIL || '').trim() || Session.getEffectiveUser().getEmail();
-  if (!to) return;
+  const to = recipient_(settings);
+  if (!to) { console.warn('找不到通知信收件者：請在「網站設定」填入 NOTIFY_EMAIL'); return; }
   const o = r.order, shop = settings.SHOP_NAME || '金脆鍋貼';
   const lines = [
     '訂單編號：' + r.orderNo,
@@ -299,6 +299,13 @@ function notifyShop_(settings, r) {
   MailApp.sendEmail({ to: to, subject: '[' + shop + '] 新訂單 ' + r.orderNo + '　NT$ ' + r.total, body: lines.join('\n'), htmlBody: html, name: shop + ' 訂單系統' });
 }
 
+/** 通知信收件者：優先用「網站設定」的 NOTIFY_EMAIL；留空才取部署者信箱（取不到就回傳空字串） */
+function recipient_(settings) {
+  const set = String(settings.NOTIFY_EMAIL || '').trim();
+  if (set) return set;
+  try { return Session.getEffectiveUser().getEmail(); } catch (err) { return ''; }
+}
+
 function esc_(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -320,7 +327,8 @@ function sendDailySummary() {
       count++; total += Number(r[COL.TOTAL - 1]) || 0;
     });
   }
-  const to = String(settings.NOTIFY_EMAIL || '').trim() || Session.getEffectiveUser().getEmail();
+  const to = recipient_(settings);
+  if (!to) return;
   const shop = settings.SHOP_NAME || '金脆鍋貼';
   MailApp.sendEmail({
     to: to,
