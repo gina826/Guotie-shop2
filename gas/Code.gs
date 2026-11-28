@@ -7,10 +7,11 @@
  */
 
 /* ================= 常數 ================= */
-const SHEET_ORDERS = '訂單';
-const SHEET_ITEMS = '訂單明細';
-const SHEET_PRODUCTS = '商品';
-const SHEET_SETTINGS = '設定';
+// 工作表名稱加上「網站」前綴，避免與你試算表裡既有的「訂單」「商品」「設定」等工作表撞名
+const SHEET_ORDERS = '網站訂單';
+const SHEET_ITEMS = '網站訂單明細';
+const SHEET_PRODUCTS = '網站商品';
+const SHEET_SETTINGS = '網站設定';
 
 const ORDER_HEADERS = ['訂單編號', '建立時間', '狀態', '取餐方式', '姓名', '手機', '外送地址', '期望時間', '備註', '品項摘要', '總金額', '來源', 'requestId', '系統備註'];
 const ITEM_HEADERS = ['訂單編號', '品項ID', '品名', '單價', '數量', '小計'];
@@ -377,7 +378,18 @@ function setup() {
 
 function ensureSheet_(ss, name, headers) {
   let sh = ss.getSheetByName(name);
-  if (!sh) sh = ss.insertSheet(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+  } else {
+    // 已存在：只有「空白」或「標題列與本系統完全相同（重複執行 setup）」才接手，
+    // 否則停下來，避免覆蓋你原本的資料、資料驗證與格式。
+    const cur = sh.getRange(1, 1, 1, headers.length).getValues()[0].map(String);
+    const empty = sh.getLastRow() === 0 || (sh.getLastRow() === 1 && cur.every(c => c === ''));
+    const same = headers.every((h, i) => cur[i] === h);
+    if (!empty && !same) {
+      throw new Error('已有名為「' + name + '」的工作表，且內容與本系統不同，為避免覆蓋已停止。請把它改名，或刪除後再執行 setup。');
+    }
+  }
   sh.getRange(1, 1, 1, headers.length).setValues([headers])
     .setFontWeight('bold').setBackground('#3B2A1E').setFontColor('#FBF6EE').setHorizontalAlignment('center');
   sh.setFrozenRows(1);
