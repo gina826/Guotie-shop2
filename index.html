@@ -894,12 +894,21 @@
     let renderer;
     try {
       renderer = new T.WebGLRenderer({ antialias: true });
-    } catch (e) { return; }
+    } catch (e) {
+      host.innerHTML = '<p class="absolute inset-0 grid place-items-center px-6 text-center text-sm text-cream/70">此裝置或瀏覽器無法顯示 3D 街景</p>';
+      return;
+    }
 
-    const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 系統開啟「減少動態」時預設定格，使用者可按按鈕自行播放
+    const prefersReduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let userPlay = false;
+    const isStill = () => prefersReduced && !userPlay;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.domElement.style.cssText = 'display:block;width:100%;height:100%';
     renderer.domElement.setAttribute('aria-hidden', 'true');
+    // 手機退到背景再回來時，WebGL 可能被系統回收：允許還原並重新繪製
+    renderer.domElement.addEventListener('webglcontextlost', e => e.preventDefault());
+    renderer.domElement.addEventListener('webglcontextrestored', () => { if (!running) draw(0); });
     host.appendChild(renderer.domElement);
 
     const scene = new T.Scene();
@@ -1590,7 +1599,7 @@
     function draw(dt) {
       time += dt;
       parX += (parTX - parX) * Math.min(1, dt * 3 || 1); parY += (parTY - parY) * Math.min(1, dt * 3 || 1);
-      const sway = reduceMotion ? 0 : Math.sin(time * .12) * 1.6;
+      const sway = isStill() ? 0 : Math.sin(time * .12) * 1.6;
       camera.position.set(sway + parX * 1.4, 3.1 - parY * .25, baseDist);
       camera.lookAt(sway * .6 + parX * .6, 2.8, 0);
       for (const l of lanterns) l.g.rotation.z = Math.sin(time * 1.6 + l.ph) * .08;
@@ -1615,7 +1624,7 @@
       draw(dt);
       raf = requestAnimationFrame(frame);
     }
-    function start() { if (running || reduceMotion) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+    function start() { if (running || isStill()) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
     function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
     function update() { (visible && !document.hidden) ? start() : stop(); }
 
@@ -1623,10 +1632,24 @@
       new IntersectionObserver(es => { visible = es[0].isIntersecting; update(); }, { threshold: 0 }).observe(host);
     }
     document.addEventListener('visibilitychange', update);
+    window.addEventListener('pageshow', () => { update(); if (!running) draw(0); });
     if ('ResizeObserver' in window) new ResizeObserver(resize).observe(host); else window.addEventListener('resize', resize);
 
     // 靜態（減少動態）：先讓人群走一會再定格
-    if (reduceMotion) for (let i = 0; i < 300; i++) people.forEach(p => stepPerson(p, .05));
+    if (prefersReduced) {
+      for (let i = 0; i < 300; i++) people.forEach(p => stepPerson(p, .05));
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '▶ 播放動畫';
+      btn.className = 'absolute bottom-2 right-3 z-20 rounded-full bg-ember px-4 py-2 text-xs font-bold text-white shadow-lg hover:bg-ember-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-ember/40';
+      btn.addEventListener('click', () => {
+        userPlay = !userPlay;
+        btn.textContent = userPlay ? '⏸ 暫停動畫' : '▶ 播放動畫';
+        update();
+        if (!running) draw(0);
+      });
+      host.parentNode.appendChild(btn);
+    }
     resize();
     draw(0);
     update();
