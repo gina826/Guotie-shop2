@@ -426,6 +426,8 @@ function testOrder() {
     requestId: 'test-' + Utilities.getUuid(), total: 310, source: 'test',
     items: [{ id: 'p1', qty: 1 }, { id: 'p2', qty: 1 }]
   });
-  safeAlert_(JSON.stringify(r));
+  console.log(JSON.stringify(r));
+  // 用 toast（右下角小提示）而不是 alert，避免程式停下來等你按「確定」
+  try { SpreadsheetApp.getActiveSpreadsheet().toast(r.ok ? '測試成功：' + r.orderNo : '失敗：' + r.message, '金脆鍋貼', 8); } catch (_) { /* 不在試算表環境時略過 */ }
   return r;
 }
