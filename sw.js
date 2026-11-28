@@ -3,7 +3,7 @@
    - 外部資源（CDN、字型、圖片）：先用快取、背景更新
    - 換頁（navigate）離線時回傳快取的首頁
    更新網站內容後，請調高 VERSION 以清除舊快取。 */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `gyoza-${VERSION}`;
 const SHELL = [
   './',
