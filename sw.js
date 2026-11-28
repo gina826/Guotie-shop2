@@ -1,9 +1,9 @@
 /* 金脆鍋貼 PWA Service Worker
-   - 本站檔案：先用快取、背景更新（離線可開啟）
-   - 外部資源（CDN、字型、圖片）：先用快取、背景更新
-   - 換頁（navigate）離線時回傳快取的首頁
+   - 網頁本身（首頁）：有網路就先抓最新版（網路優先），逾時或離線才用快取
+   - 其他本站檔案、外部資源（CDN、字型、圖片）：先用快取、背景更新
    更新網站內容後，請調高 VERSION 以清除舊快取。 */
-const VERSION = 'v4';
+const VERSION = 'v5';
+const NAV_TIMEOUT_MS = 4000;
 const CACHE = `gyoza-${VERSION}`;
 const SHELL = [
   './',
@@ -18,7 +18,7 @@ const SHELL = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())
   );
 });
 
@@ -38,8 +38,26 @@ self.addEventListener('fetch', event => {
   // 預約連結等外部導覽不處理
   if (req.mode === 'navigate' && url.origin !== self.location.origin) return;
 
-  event.respondWith(staleWhileRevalidate(req));
+  if (req.mode === 'navigate') event.respondWith(networkFirst(req));
+  else event.respondWith(staleWhileRevalidate(req));
 });
+
+// 首頁：網路優先（略過瀏覽器 HTTP 快取），失敗或逾時才用 Service Worker 快取
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE);
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), NAV_TIMEOUT_MS);
+    const res = await fetch(req, { cache: 'no-cache', signal: ctrl.signal });
+    clearTimeout(timer);
+    if (res && res.ok) {
+      cache.put('./index.html', res.clone()).catch(() => {});
+      return res;
+    }
+  } catch (_) { /* 離線或逾時：往下用快取 */ }
+  return (await cache.match('./index.html')) || (await cache.match('./')) ||
+    new Response('目前離線，且此內容尚未快取。', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
 
 async function staleWhileRevalidate(req) {
   const cache = await caches.open(CACHE);
